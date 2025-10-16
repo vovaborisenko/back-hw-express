@@ -1,49 +1,25 @@
-import { Resolution, Video } from '../videos/types/videos';
+import { Blog } from '../blogs/types/blogs';
 
 export const db = {
-  videos: <Video[]>[
+  blogs: <Blog[]>[
     {
-      id: 1,
-      title: 'Introduction to TypeScript',
-      author: 'John Developer',
-      canBeDownloaded: true,
-      minAgeRestriction: null,
-      createdAt: '2024-01-15T10:30:00.000Z',
-      publicationDate: '2024-01-20T08:00:00.000Z',
-      availableResolutions: [
-        Resolution.P720,
-        Resolution.P1080,
-        Resolution.P1440,
-      ],
+      id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+      name: 'Tech Insights',
+      description: 'Latest news and trends in technology world',
+      websiteUrl: 'https://tech-insights.blog.com',
     },
     {
-      id: 2,
-      title: 'Advanced JavaScript Patterns',
-      author: 'Sarah Coder',
-      canBeDownloaded: false,
-      minAgeRestriction: 16,
-      createdAt: '2024-01-10T14:20:00.000Z',
-      publicationDate: '2024-01-25T12:00:00.000Z',
-      availableResolutions: [
-        Resolution.P144,
-        Resolution.P360,
-        Resolution.P480,
-        Resolution.P720,
-      ],
+      id: 'b2c3d4e5-f6a7-890b-cdef-234567890123',
+      name: 'Web Development Guide',
+      description: 'Helpful articles and tutorials on web development',
+      websiteUrl: 'https://webdev-guide.dev',
     },
     {
-      id: 3,
-      title: 'Web Development Fundamentals',
-      author: 'Mike Tech',
-      canBeDownloaded: true,
-      minAgeRestriction: 12,
-      createdAt: '2024-01-05T09:15:00.000Z',
-      publicationDate: '2024-01-18T15:30:00.000Z',
-      availableResolutions: [
-        Resolution.P1080,
-        Resolution.P1440,
-        Resolution.P2160,
-      ],
+      id: 'c3d4e5f6-a7b8-901c-def2-345678901234',
+      name: 'JavaScript Mastery',
+      description: 'Learning JavaScript and modern frameworks',
+      websiteUrl: 'https://js-mastery.org',
     },
   ],
+  posts: <Blog[]>[],
 };
