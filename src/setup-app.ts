@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import { testingRouter } from './testing/routers/testing.router';
 import { blogsRouter } from './blogs/routers/blogs.router';
+import { postsRouter } from './posts/routers/posts.router';
 import { PATH } from './core/paths/paths';
 
 export function setupApp(app: Express): Express {
@@ -12,6 +13,7 @@ export function setupApp(app: Express): Express {
 
   app.use(PATH.TESTING, testingRouter);
   app.use(PATH.BLOGS, blogsRouter);
+  app.use(PATH.POSTS, postsRouter);
 
   return app;
 }

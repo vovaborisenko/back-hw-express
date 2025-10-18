@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { blogsRepository } from '../../repositories/blogs.repository';
+import { postsRepository } from '../../repositories/posts.repository';
 
-export function deleteBlogHandler(req: Request<{ id: string }>, res: Response) {
+export function deletePostHandler(req: Request<{ id: string }>, res: Response) {
   try {
-    blogsRepository.delete(req.params.id);
+    postsRepository.delete(req.params.id);
 
     res.sendStatus(HttpStatus.NoContent);
   } catch {

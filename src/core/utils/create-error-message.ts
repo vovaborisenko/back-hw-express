@@ -1,5 +1,7 @@
 import { ErrorMessages, ValidationError } from '../types/validation';
 
-export function createErrorMessages(errors: ValidationError[]): ErrorMessages {
+export function createErrorMessages<T extends object>(
+  errors: ValidationError<T>[],
+): ErrorMessages<T> {
   return { errorsMessages: errors };
 }

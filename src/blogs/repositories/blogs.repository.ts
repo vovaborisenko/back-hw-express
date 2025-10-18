@@ -1,9 +1,8 @@
 import { Blog } from '../types/blogs';
 import { db } from '../../db/in-memory.db';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
-import { HttpStatus } from '../../core/types/http-status';
 
-export const blogsRepositiry = {
+export const blogsRepository = {
   findAll(): Blog[] {
     return db.blogs;
   },

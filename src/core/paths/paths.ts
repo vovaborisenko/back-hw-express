@@ -1,5 +1,5 @@
-export const PATH = {
-  BLOGS: '/api/blogs',
-  POSTS: '/api/posts',
-  TESTING: '/api/testing',
-};
+export enum PATH {
+  BLOGS = '/api/blogs',
+  POSTS = '/api/posts',
+  TESTING = '/api/testing',
+}

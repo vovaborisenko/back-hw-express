@@ -1,4 +1,4 @@
-export function validateStringFactory(maxLenght: number) {
+export function validateStringFactory(maxLength: number = Infinity) {
   return (value: unknown): string | undefined => {
     if (typeof value !== 'string') {
       return 'Invalid string';
@@ -10,8 +10,8 @@ export function validateStringFactory(maxLenght: number) {
       return 'Required value';
     }
 
-    if (cleanValue.length > maxLenght) {
-      return `Max length ${maxLenght}`;
+    if (cleanValue.length > maxLength) {
+      return `Max length ${maxLength}`;
     }
   };
 }

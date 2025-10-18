@@ -1,15 +1,15 @@
 import { Request, Response } from 'express';
-import { db } from '../../../db/in-memory.db';
 import { Blog } from '../../types/blogs';
 import { HttpStatus } from '../../../core/types/http-status';
 import { ErrorMessages } from '../../../core/types/validation';
 import { validateBlogCreateDto } from '../../validation/validate-blog-create-dto';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
-import { blogsRepositiry } from '../../repositories/blogs.repository';
+import { blogsRepository } from '../../repositories/blogs.repository';
+import { BlogCreateDto } from '../../dto/blog.create-dto';
 
 export function createBlogHandler(
-  req: Request,
-  res: Response<Blog | ErrorMessages>,
+  req: Request<{}, {}, BlogCreateDto>,
+  res: Response<Blog | ErrorMessages<BlogCreateDto>>,
 ) {
   const errors = validateBlogCreateDto(req.body);
 
@@ -26,7 +26,7 @@ export function createBlogHandler(
     websiteUrl: req.body.websiteUrl,
   };
 
-  blogsRepositiry.create(blog);
+  blogsRepository.create(blog);
 
   res.status(HttpStatus.Created).json(blog);
 }

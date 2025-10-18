@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
-import { validateBlogUpdateDto } from '../../validation/validate-blog-update-dto';
-import { blogsRepository } from '../../repositories/blogs.repository';
+import { validatePostUpdateDto } from '../../validation/validate-post-update-dto';
+import { postsRepository } from '../../repositories/posts.repository';
 import { ErrorMessages } from '../../../core/types/validation';
-import { BlogUpdateDto } from '../../dto/blog.update-dto';
+import { PostUpdateDto } from '../../dto/post.update-dto';
 
-export function updateBlogHandler(
-  req: Request<{ id: string }, {}, BlogUpdateDto>,
-  res: Response<ErrorMessages<BlogUpdateDto> | undefined>,
+export function updatePostHandler(
+  req: Request<{ id: string }, {}, PostUpdateDto>,
+  res: Response<ErrorMessages<PostUpdateDto> | undefined>,
 ) {
-  const errors = validateBlogUpdateDto(req.body);
+  const errors = validatePostUpdateDto(req.body);
 
   if (errors.length) {
     res.status(HttpStatus.BadRequest).json(createErrorMessages(errors));
@@ -19,7 +19,7 @@ export function updateBlogHandler(
   }
 
   try {
-    blogsRepository.update(req.params.id, req.body);
+    postsRepository.update(req.params.id, req.body);
 
     res.sendStatus(HttpStatus.NoContent);
   } catch {
