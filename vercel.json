@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "it-incubator-hw",
+  "name": "it-incubator-hw-02",
   "builds": [
     { "src": "src/index.ts", "use": "@vercel/node" }
   ],

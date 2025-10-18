@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Blog } from '../../types/blogs';
-import { HttpStatus } from '../../../core/types/http-status';
 import { blogsRepository } from '../../repositories/blogs.repository';
+import { NotExistError } from '../../../core/errors/not-exist.error';
 
 export function getBlogHandler(
   req: Request<{ id: string }>,
@@ -10,9 +10,7 @@ export function getBlogHandler(
   const blog = blogsRepository.findById(req.params.id);
 
   if (!blog) {
-    res.sendStatus(HttpStatus.NotFound);
-
-    return;
+    throw new NotExistError('Blog');
   }
 
   res.json(blog);

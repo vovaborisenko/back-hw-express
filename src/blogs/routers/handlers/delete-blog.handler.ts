@@ -3,11 +3,7 @@ import { HttpStatus } from '../../../core/types/http-status';
 import { blogsRepository } from '../../repositories/blogs.repository';
 
 export function deleteBlogHandler(req: Request<{ id: string }>, res: Response) {
-  try {
-    blogsRepository.delete(req.params.id);
+  blogsRepository.delete(req.params.id);
 
-    res.sendStatus(HttpStatus.NoContent);
-  } catch {
-    res.sendStatus(HttpStatus.NotFound);
-  }
+  res.sendStatus(HttpStatus.NoContent);
 }

@@ -4,16 +4,40 @@ import { getBlogHandler } from './handlers/get-blog.handler';
 import { createBlogHandler } from './handlers/create-blog.handler';
 import { updateBlogHandler } from './handlers/update-blog.handler';
 import { deleteBlogHandler } from './handlers/delete-blog.handler';
+import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
+import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
+import { blogDtoValidationMiddleware } from '../validation/blog-dto-validation.middleware';
 
 export const blogsRouter = Router({});
 
 blogsRouter
   .get('/', getBlogListHandler)
 
-  .post('/', createBlogHandler)
+  .post(
+    '/',
+    blogDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    createBlogHandler,
+  )
 
-  .get('/:id', getBlogHandler)
+  .get(
+    '/:id',
+    paramIdValidationMiddleware(),
+    reqValidationResultMiddleware,
+    getBlogHandler,
+  )
 
-  .put('/:id', updateBlogHandler)
+  .put(
+    '/:id',
+    paramIdValidationMiddleware(),
+    blogDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    updateBlogHandler,
+  )
 
-  .delete('/:id', deleteBlogHandler);
+  .delete(
+    '/:id',
+    paramIdValidationMiddleware(),
+    reqValidationResultMiddleware,
+    deleteBlogHandler,
+  );

@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { Post } from '../../types/posts';
-import { HttpStatus } from '../../../core/types/http-status';
 import { postsRepository } from '../../repositories/posts.repository';
 import { blogsRepository } from '../../../blogs/repositories/blogs.repository';
+import { NotExistError } from '../../../core/errors/not-exist.error';
 
 export function getPostHandler(
   req: Request<{ id: string }>,
@@ -11,9 +11,7 @@ export function getPostHandler(
   const post = postsRepository.findById(req.params.id);
 
   if (!post) {
-    res.sendStatus(HttpStatus.NotFound);
-
-    return;
+    throw new NotExistError('Post');
   }
 
   const blog = blogsRepository.findById(post.blogId);

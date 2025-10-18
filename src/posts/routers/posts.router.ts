@@ -4,16 +4,40 @@ import { getPostHandler } from './handlers/get-post.handler';
 import { createPostHandler } from './handlers/create-post.handler';
 import { updatePostHandler } from './handlers/update-post.handler';
 import { deletePostHandler } from './handlers/delete-post.handler';
+import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
+import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
+import { postDtoValidationMiddleware } from '../validation/post-dto-validation.middleware';
 
 export const postsRouter = Router({});
 
 postsRouter
   .get('/', getPostListHandler)
 
-  .post('/', createPostHandler)
+  .post(
+    '/',
+    postDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    createPostHandler,
+  )
 
-  .get('/:id', getPostHandler)
+  .get(
+    '/:id',
+    paramIdValidationMiddleware(),
+    reqValidationResultMiddleware,
+    getPostHandler,
+  )
 
-  .put('/:id', updatePostHandler)
+  .put(
+    '/:id',
+    paramIdValidationMiddleware(),
+    postDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    updatePostHandler,
+  )
 
-  .delete('/:id', deletePostHandler);
+  .delete(
+    '/:id',
+    paramIdValidationMiddleware(),
+    reqValidationResultMiddleware,
+    deletePostHandler,
+  );

@@ -1,6 +1,7 @@
 import { Blog } from '../types/blogs';
 import { db } from '../../db/in-memory.db';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
+import { NotExistError } from '../../core/errors/not-exist.error';
 
 export const blogsRepository = {
   findAll(): Blog[] {
@@ -21,7 +22,7 @@ export const blogsRepository = {
     const blog = db.blogs.find(({ id }) => id === blogID);
 
     if (!blog) {
-      throw new Error('Blog not exist');
+      throw new NotExistError('Blog');
     }
 
     blog.name = dto.name;
@@ -33,7 +34,7 @@ export const blogsRepository = {
     const index = db.blogs.findIndex(({ id }) => id === blogID);
 
     if (index === -1) {
-      throw new Error('Blog not exist');
+      throw new NotExistError('Blog');
     }
 
     db.blogs.splice(index, 1);

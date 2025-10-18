@@ -2,6 +2,7 @@ import { PostBase } from '../types/posts';
 import { db } from '../../db/in-memory.db';
 import { PostUpdateDto } from '../dto/post.update-dto';
 import { blogsRepository } from '../../blogs/repositories/blogs.repository';
+import { NotExistError } from '../../core/errors/not-exist.error';
 
 export const postsRepository = {
   findAll(): PostBase[] {
@@ -22,13 +23,13 @@ export const postsRepository = {
     const post = db.posts.find(({ id }) => id === postID);
 
     if (!post) {
-      throw new Error('Post not exist');
+      throw new NotExistError('Post');
     }
 
     const blog = blogsRepository.findById(post.blogId);
 
     if (!blog) {
-      throw new Error('Blog not exist');
+      throw new NotExistError('Blog');
     }
 
     post.title = dto.title;
@@ -41,7 +42,7 @@ export const postsRepository = {
     const index = db.posts.findIndex(({ id }) => id === postID);
 
     if (index === -1) {
-      throw new Error('Post not exist');
+      throw new NotExistError('Post');
     }
 
     db.posts.splice(index, 1);

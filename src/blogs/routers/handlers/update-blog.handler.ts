@@ -1,28 +1,13 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { createErrorMessages } from '../../../core/utils/create-error-message';
-import { validateBlogUpdateDto } from '../../validation/validate-blog-update-dto';
 import { blogsRepository } from '../../repositories/blogs.repository';
-import { ErrorMessages } from '../../../core/types/validation';
 import { BlogUpdateDto } from '../../dto/blog.update-dto';
 
 export function updateBlogHandler(
   req: Request<{ id: string }, {}, BlogUpdateDto>,
-  res: Response<ErrorMessages<BlogUpdateDto> | undefined>,
+  res: Response<undefined>,
 ) {
-  const errors = validateBlogUpdateDto(req.body);
+  blogsRepository.update(req.params.id, req.body);
 
-  if (errors.length) {
-    res.status(HttpStatus.BadRequest).json(createErrorMessages(errors));
-
-    return;
-  }
-
-  try {
-    blogsRepository.update(req.params.id, req.body);
-
-    res.sendStatus(HttpStatus.NoContent);
-  } catch {
-    res.sendStatus(HttpStatus.NotFound);
-  }
+  res.sendStatus(HttpStatus.NoContent);
 }
