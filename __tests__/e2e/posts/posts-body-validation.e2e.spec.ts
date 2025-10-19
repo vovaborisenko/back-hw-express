@@ -38,6 +38,8 @@ describe('Posts API body validation', () => {
     websiteUrl: 'https://js-mastery.org',
   };
 
+  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
+
   beforeEach(async () => {
     await request(app)
       .delete(`${PATH.TESTING}/all-data`)
@@ -45,6 +47,7 @@ describe('Posts API body validation', () => {
 
     const { body: createdBlog1 } = await request(app)
       .post(PATH.BLOGS)
+      .set('Authorization', validAuth)
       .send(blog1)
       .expect(HttpStatus.Created);
 
@@ -52,6 +55,7 @@ describe('Posts API body validation', () => {
 
     const { body: createdBlog2 } = await request(app)
       .post(PATH.BLOGS)
+      .set('Authorization', validAuth)
       .send(blog2)
       .expect(HttpStatus.Created);
 
@@ -85,6 +89,7 @@ describe('Posts API body validation', () => {
       async ({ field, value, message }) => {
         const response = await request(app)
           .post(PATH.POSTS)
+          .set('Authorization', validAuth)
           .send({ ...newPost, [field]: value })
           .expect(HttpStatus.BadRequest);
 
@@ -124,11 +129,13 @@ describe('Posts API body validation', () => {
       async ({ field, value, message }) => {
         const { body: post } = await request(app)
           .post(PATH.POSTS)
+          .set('Authorization', validAuth)
           .send(newPost)
           .expect(HttpStatus.Created);
 
         const response = await request(app)
           .put(`${PATH.POSTS}/${post.id}`)
+          .set('Authorization', validAuth)
           .send({ ...updatedPost, [field]: value })
           .expect(HttpStatus.BadRequest);
 

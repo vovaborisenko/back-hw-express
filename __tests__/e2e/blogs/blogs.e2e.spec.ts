@@ -28,10 +28,36 @@ describe('Blogs API', () => {
     websiteUrl: 'https://webdev-guide.dev',
   };
 
+  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
+  const invalidAuth = 'Basic ' + Buffer.from('wrong:wrong').toString('base64');
+
+  it.each`
+    path                  | method
+    ${PATH.BLOGS}         | ${'post'}
+    ${PATH.BLOGS + '/12'} | ${'put'}
+    ${PATH.BLOGS + '/12'} | ${'delete'}
+  `(
+    'should return 401 when invalid header Authorization: [$method] $path',
+    async ({
+      path,
+      method,
+    }: {
+      path: string;
+      method: 'post' | 'put' | 'delete';
+    }) => {
+      await request(app)[method](path).expect(HttpStatus.Unauthorized);
+      await request(app)
+        [method](path)
+        .set('Authorization', invalidAuth)
+        .expect(HttpStatus.Unauthorized);
+    },
+  );
+
   describe(`POST ${PATH.BLOGS}`, () => {
     it('should create', async () => {
       const response = await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
 
@@ -49,10 +75,12 @@ describe('Blogs API', () => {
     it('should return list of blogs', async () => {
       await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
       await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
 
@@ -70,10 +98,12 @@ describe('Blogs API', () => {
     it('should return blog with requested id', async () => {
       await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
       const { body: blog2 } = await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
 
@@ -89,6 +119,7 @@ describe('Blogs API', () => {
     it('should return 404 when no blog', async () => {
       await request(app)
         .put(`${PATH.BLOGS}/987`)
+        .set('Authorization', validAuth)
         .send(updatedBlog)
         .expect(HttpStatus.NotFound);
     });
@@ -96,19 +127,23 @@ describe('Blogs API', () => {
     it('should return 204 when requested id exist', async () => {
       const { body: blog1 } = await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
       const { body: blog2 } = await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
 
       await request(app)
         .put(`${PATH.BLOGS}/${blog1.id}`)
+        .set('Authorization', validAuth)
         .send({ ...updatedBlog, minAgeRestriction: null })
         .expect(HttpStatus.NoContent);
       await request(app)
         .put(`${PATH.BLOGS}/${blog2.id}`)
+        .set('Authorization', validAuth)
         .send(updatedBlog)
         .expect(HttpStatus.NoContent);
 
@@ -124,21 +159,25 @@ describe('Blogs API', () => {
     it('should return 404 when no blog', async () => {
       await request(app)
         .delete(`${PATH.BLOGS}/987`)
+        .set('Authorization', validAuth)
         .expect(HttpStatus.NotFound);
     });
 
     it('should return 204 when requested id exist', async () => {
       await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
       const { body: blog2 } = await request(app)
         .post(PATH.BLOGS)
+        .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
 
       await request(app)
         .delete(`${PATH.BLOGS}/${blog2.id}`)
+        .set('Authorization', validAuth)
         .expect(HttpStatus.NoContent);
     });
   });

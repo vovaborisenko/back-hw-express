@@ -7,6 +7,7 @@ import { deleteBlogHandler } from './handlers/delete-blog.handler';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { blogDtoValidationMiddleware } from '../validation/blog-dto-validation.middleware';
+import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-admin-guard.middleware';
 
 export const blogsRouter = Router({});
 
@@ -15,6 +16,7 @@ blogsRouter
 
   .post(
     '/',
+    superAdminGuardMiddleware,
     blogDtoValidationMiddleware,
     reqValidationResultMiddleware,
     createBlogHandler,
@@ -29,6 +31,7 @@ blogsRouter
 
   .put(
     '/:id',
+    superAdminGuardMiddleware,
     paramIdValidationMiddleware(),
     blogDtoValidationMiddleware,
     reqValidationResultMiddleware,
@@ -37,6 +40,7 @@ blogsRouter
 
   .delete(
     '/:id',
+    superAdminGuardMiddleware,
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
     deleteBlogHandler,

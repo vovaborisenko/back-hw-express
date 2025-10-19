@@ -45,6 +45,7 @@ describe('Posts API', () => {
 
     const { body: createdBlog1 } = await request(app)
       .post(PATH.BLOGS)
+      .set('Authorization', validAuth)
       .send(blog1)
       .expect(HttpStatus.Created);
 
@@ -52,16 +53,43 @@ describe('Posts API', () => {
 
     const { body: createdBlog2 } = await request(app)
       .post(PATH.BLOGS)
+      .set('Authorization', validAuth)
       .send(blog2)
       .expect(HttpStatus.Created);
 
     updatedPost.blogId = createdBlog2.id;
   });
 
+  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
+  const invalidAuth = 'Basic ' + Buffer.from('wrong:wrong').toString('base64');
+
+  it.each`
+    path                  | method
+    ${PATH.POSTS}         | ${'post'}
+    ${PATH.POSTS + '/12'} | ${'put'}
+    ${PATH.POSTS + '/12'} | ${'delete'}
+  `(
+    `should return 401 when invalid header Authorization: [$method] $path`,
+    async ({
+      path,
+      method,
+    }: {
+      path: string;
+      method: 'post' | 'put' | 'delete';
+    }) => {
+      await request(app)[method](path).expect(HttpStatus.Unauthorized);
+      await request(app)
+        [method](path)
+        .set('Authorization', invalidAuth)
+        .expect(HttpStatus.Unauthorized);
+    },
+  );
+
   describe(`POST ${PATH.POSTS}`, () => {
     it('should create', async () => {
       const response = await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
 
@@ -79,10 +107,12 @@ describe('Posts API', () => {
     it('should return list of posts', async () => {
       await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
       await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
 
@@ -100,10 +130,12 @@ describe('Posts API', () => {
     it('should return post with requested id', async () => {
       await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
       const { body: post2 } = await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
 
@@ -119,6 +151,7 @@ describe('Posts API', () => {
     it('should return 404 when no post', async () => {
       await request(app)
         .put(`${PATH.POSTS}/987`)
+        .set('Authorization', validAuth)
         .send(updatedPost)
         .expect(HttpStatus.NotFound);
     });
@@ -126,19 +159,23 @@ describe('Posts API', () => {
     it('should return 204 when requested id exist', async () => {
       const { body: post1 } = await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
       const { body: post2 } = await request(app)
         .post(PATH.POSTS)
+        .set('Authorization', validAuth)
         .send(newPost)
         .expect(HttpStatus.Created);
 
       await request(app)
         .put(`${PATH.POSTS}/${post1.id}`)
-        .send({ ...updatedPost, minAgeRestriction: null })
+        .set('Authorization', validAuth)
+        .send({ ...updatedPost, title: 'updated title' })
         .expect(HttpStatus.NoContent);
       await request(app)
         .put(`${PATH.POSTS}/${post2.id}`)
+        .set('Authorization', validAuth)
         .send(updatedPost)
         .expect(HttpStatus.NoContent);
 
@@ -154,6 +191,7 @@ describe('Posts API', () => {
     it('should return 404 when no post', async () => {
       await request(app)
         .delete(`${PATH.POSTS}/987`)
+        .set('Authorization', validAuth)
         .expect(HttpStatus.NotFound);
     });
 
@@ -161,14 +199,17 @@ describe('Posts API', () => {
       await request(app)
         .post(PATH.POSTS)
         .send(newPost)
+        .set('Authorization', validAuth)
         .expect(HttpStatus.Created);
       const { body: post2 } = await request(app)
         .post(PATH.POSTS)
         .send(newPost)
+        .set('Authorization', validAuth)
         .expect(HttpStatus.Created);
 
       await request(app)
         .delete(`${PATH.POSTS}/${post2.id}`)
+        .set('Authorization', validAuth)
         .expect(HttpStatus.NoContent);
     });
   });

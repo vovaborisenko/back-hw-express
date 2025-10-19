@@ -27,6 +27,7 @@ describe('Blogs API body validation', () => {
     description: 'Helpful articles and tutorials on web development',
     websiteUrl: 'https://webdev-guide.dev',
   };
+  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
 
   describe(`POST ${PATH.BLOGS}`, () => {
     it.each`
@@ -51,6 +52,7 @@ describe('Blogs API body validation', () => {
       async ({ field, value, message }) => {
         const response = await request(app)
           .post(PATH.BLOGS)
+          .set('Authorization', validAuth)
           .send({ ...newBlog, [field]: value })
           .expect(HttpStatus.BadRequest);
 
@@ -86,11 +88,13 @@ describe('Blogs API body validation', () => {
       async ({ field, value, message }) => {
         const { body: blog } = await request(app)
           .post(PATH.BLOGS)
+          .set('Authorization', validAuth)
           .send(newBlog)
           .expect(HttpStatus.Created);
 
         const response = await request(app)
           .put(`${PATH.BLOGS}/${blog.id}`)
+          .set('Authorization', validAuth)
           .send({ ...updatedBlog, [field]: value })
           .expect(HttpStatus.BadRequest);
 

@@ -7,6 +7,7 @@ import { deletePostHandler } from './handlers/delete-post.handler';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { postDtoValidationMiddleware } from '../validation/post-dto-validation.middleware';
+import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-admin-guard.middleware';
 
 export const postsRouter = Router({});
 
@@ -15,6 +16,7 @@ postsRouter
 
   .post(
     '/',
+    superAdminGuardMiddleware,
     postDtoValidationMiddleware,
     reqValidationResultMiddleware,
     createPostHandler,
@@ -29,6 +31,7 @@ postsRouter
 
   .put(
     '/:id',
+    superAdminGuardMiddleware,
     paramIdValidationMiddleware(),
     postDtoValidationMiddleware,
     reqValidationResultMiddleware,
@@ -37,6 +40,7 @@ postsRouter
 
   .delete(
     '/:id',
+    superAdminGuardMiddleware,
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
     deletePostHandler,
