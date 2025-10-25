@@ -5,15 +5,28 @@ import { HttpStatus } from '../../../src/core/types/http-status';
 import { BlogCreateDto } from '../../../src/blogs/dto/blog.create-dto';
 import { BlogUpdateDto } from '../../../src/blogs/dto/blog.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
+import { runDB, stopDb } from '../../../src/db/mongo.db';
+import { SETTINGS } from '../../../src/core/settings/settings';
+import {
+  invalidAuth,
+  validAuth,
+  validMongoId,
+} from '../../../src/testing/constants/common';
 
 describe('Blogs API', () => {
   const app = express();
   setupApp(app);
 
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
+
+  afterAll(async () => {
+    await stopDb();
+  });
+
   beforeEach(async () => {
-    await request(app)
-      .delete(`${PATH.TESTING}/all-data`)
-      .expect(HttpStatus.NoContent);
+    await request(app).delete(PATH.TESTING_CLEAR).expect(HttpStatus.NoContent);
   });
 
   const newBlog: BlogCreateDto = {
@@ -27,9 +40,6 @@ describe('Blogs API', () => {
     description: 'Helpful articles and tutorials on web development',
     websiteUrl: 'https://webdev-guide.dev',
   };
-
-  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
-  const invalidAuth = 'Basic ' + Buffer.from('wrong:wrong').toString('base64');
 
   it.each`
     path                  | method
@@ -92,7 +102,9 @@ describe('Blogs API', () => {
 
   describe(`GET ${PATH.BLOGS}/:id`, () => {
     it('should return 404 when no blog', async () => {
-      await request(app).get(`${PATH.BLOGS}/987`).expect(HttpStatus.NotFound);
+      await request(app)
+        .get(`${PATH.BLOGS}/${validMongoId}`)
+        .expect(HttpStatus.NotFound);
     });
 
     it('should return blog with requested id', async () => {
@@ -118,7 +130,7 @@ describe('Blogs API', () => {
   describe(`PUT ${PATH.BLOGS}/:id`, () => {
     it('should return 404 when no blog', async () => {
       await request(app)
-        .put(`${PATH.BLOGS}/987`)
+        .put(`${PATH.BLOGS}/${validMongoId}`)
         .set('Authorization', validAuth)
         .send(updatedBlog)
         .expect(HttpStatus.NotFound);
@@ -158,7 +170,7 @@ describe('Blogs API', () => {
   describe(`DELETE ${PATH.BLOGS}/:id`, () => {
     it('should return 404 when no blog', async () => {
       await request(app)
-        .delete(`${PATH.BLOGS}/987`)
+        .delete(`${PATH.BLOGS}/${validMongoId}`)
         .set('Authorization', validAuth)
         .expect(HttpStatus.NotFound);
     });

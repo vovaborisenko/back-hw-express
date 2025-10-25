@@ -1,50 +1,49 @@
-import { PostBase } from '../types/posts';
-import { db } from '../../db/in-memory.db';
+import { ObjectId, WithId } from 'mongodb';
+import { Post } from '../types/post';
 import { PostUpdateDto } from '../dto/post.update-dto';
-import { blogsRepository } from '../../blogs/repositories/blogs.repository';
 import { NotExistError } from '../../core/errors/not-exist.error';
+import { postCollection } from '../../db/mongo.db';
 
 export const postsRepository = {
-  findAll(): PostBase[] {
-    return db.posts;
+  findAll(): Promise<WithId<Post>[]> {
+    return postCollection.find().toArray();
   },
 
-  findById(postID: string): PostBase | null {
-    return db.posts.find(({ id }) => id === postID) ?? null;
+  findById(id: string): Promise<WithId<Post> | null> {
+    return postCollection.findOne({ _id: new ObjectId(id) });
   },
 
-  create(post: PostBase): PostBase {
-    db.posts.push(post);
+  async create(post: Post): Promise<WithId<Post>> {
+    const insertResult = await postCollection.insertOne(post);
 
-    return post;
+    return { ...post, _id: insertResult.insertedId };
   },
 
-  update(postID: string, dto: PostUpdateDto): void {
-    const post = db.posts.find(({ id }) => id === postID);
+  async update(id: string, dto: PostUpdateDto): Promise<void> {
+    const updateResult = await postCollection.updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          title: dto.title,
+          shortDescription: dto.shortDescription,
+          content: dto.content,
+          blogId: dto.blogId,
+        },
+      },
+    );
 
-    if (!post) {
+    if (updateResult.matchedCount < 1) {
       throw new NotExistError('Post');
     }
-
-    const blog = blogsRepository.findById(post.blogId);
-
-    if (!blog) {
-      throw new NotExistError('Blog');
-    }
-
-    post.title = dto.title;
-    post.shortDescription = dto.shortDescription;
-    post.content = dto.content;
-    post.blogId = dto.blogId;
   },
 
-  delete(postID: string): void {
-    const index = db.posts.findIndex(({ id }) => id === postID);
+  async delete(id: string): Promise<void> {
+    const deleteResult = await postCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
 
-    if (index === -1) {
+    if (deleteResult.deletedCount < 1) {
       throw new NotExistError('Post');
     }
-
-    db.posts.splice(index, 1);
   },
 };

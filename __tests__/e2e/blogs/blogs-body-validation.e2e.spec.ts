@@ -5,15 +5,24 @@ import { HttpStatus } from '../../../src/core/types/http-status';
 import { BlogCreateDto } from '../../../src/blogs/dto/blog.create-dto';
 import { BlogUpdateDto } from '../../../src/blogs/dto/blog.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
+import { runDB, stopDb } from '../../../src/db/mongo.db';
+import { SETTINGS } from '../../../src/core/settings/settings';
+import { validAuth } from '../../../src/testing/constants/common';
 
 describe('Blogs API body validation', () => {
   const app = express();
   setupApp(app);
 
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
+
+  afterAll(async () => {
+    await stopDb();
+  });
+
   beforeEach(async () => {
-    await request(app)
-      .delete(`${PATH.TESTING}/all-data`)
-      .expect(HttpStatus.NoContent);
+    await request(app).delete(PATH.TESTING_CLEAR).expect(HttpStatus.NoContent);
   });
 
   const newBlog: BlogCreateDto = {
@@ -27,7 +36,6 @@ describe('Blogs API body validation', () => {
     description: 'Helpful articles and tutorials on web development',
     websiteUrl: 'https://webdev-guide.dev',
   };
-  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
 
   describe(`POST ${PATH.BLOGS}`, () => {
     it.each`

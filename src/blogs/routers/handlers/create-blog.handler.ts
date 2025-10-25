@@ -1,21 +1,23 @@
 import { Request, Response } from 'express';
-import { Blog } from '../../types/blogs';
+import { Blog } from '../../types/blog';
 import { HttpStatus } from '../../../core/types/http-status';
 import { blogsRepository } from '../../repositories/blogs.repository';
 import { BlogCreateDto } from '../../dto/blog.create-dto';
+import { BlogViewModel } from '../../types/blog.view-model';
+import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 
-export function createBlogHandler(
+export async function createBlogHandler(
   req: Request<{}, {}, BlogCreateDto>,
-  res: Response<Blog>,
+  res: Response<BlogViewModel>,
 ) {
-  const blog = {
-    id: Date.now().toString(32),
+  const newBlog = {
     name: req.body.name,
     description: req.body.description,
     websiteUrl: req.body.websiteUrl,
+    isMembership: false,
   };
 
-  blogsRepository.create(blog);
+  const createdBlog = await blogsRepository.create(newBlog);
 
-  res.status(HttpStatus.Created).json(blog);
+  res.status(HttpStatus.Created).json(mapToBlogViewModel(createdBlog));
 }

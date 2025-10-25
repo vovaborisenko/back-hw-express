@@ -5,10 +5,21 @@ import { HttpStatus } from '../../../src/core/types/http-status';
 import { PostCreateDto } from '../../../src/posts/dto/post.create-dto';
 import { PostUpdateDto } from '../../../src/posts/dto/post.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
+import { runDB, stopDb } from '../../../src/db/mongo.db';
+import { SETTINGS } from '../../../src/core/settings/settings';
+import { validAuth } from '../../../src/testing/constants/common';
 
 describe('Posts API body validation', () => {
   const app = express();
   setupApp(app);
+
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
+
+  afterAll(async () => {
+    await stopDb();
+  });
 
   const newPost: PostCreateDto = {
     title: 'Новые возможности TypeScript',
@@ -38,12 +49,8 @@ describe('Posts API body validation', () => {
     websiteUrl: 'https://js-mastery.org',
   };
 
-  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
-
   beforeEach(async () => {
-    await request(app)
-      .delete(`${PATH.TESTING}/all-data`)
-      .expect(HttpStatus.NoContent);
+    await request(app).delete(PATH.TESTING_CLEAR).expect(HttpStatus.NoContent);
 
     const { body: createdBlog1 } = await request(app)
       .post(PATH.BLOGS)
@@ -84,6 +91,7 @@ describe('Posts API body validation', () => {
       ${'blogId'}           | ${5}                | ${'blogId should be string'}
       ${'blogId'}           | ${''}               | ${'Length of blogId should be between 1 and Infinity'}
       ${'blogId'}           | ${'    '}           | ${'Length of blogId should be between 1 and Infinity'}
+      ${'blogId'}           | ${'dsfr'}           | ${'ID is invalid'}
     `(
       'should throw 400: field = $field, value = $value, message = $message',
       async ({ field, value, message }) => {
@@ -124,6 +132,7 @@ describe('Posts API body validation', () => {
       ${'blogId'}           | ${5}                | ${'blogId should be string'}
       ${'blogId'}           | ${''}               | ${'Length of blogId should be between 1 and Infinity'}
       ${'blogId'}           | ${'    '}           | ${'Length of blogId should be between 1 and Infinity'}
+      ${'blogId'}           | ${'dsfr'}           | ${'ID is invalid'}
     `(
       'should throw 400: field = $field, value = $value, message = $message',
       async ({ field, value, message }) => {

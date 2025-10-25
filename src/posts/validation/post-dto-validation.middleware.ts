@@ -4,5 +4,7 @@ export const postDtoValidationMiddleware = [
   getBodyStringValidationMiddleware('title', { max: 30 }),
   getBodyStringValidationMiddleware('shortDescription', { max: 100 }),
   getBodyStringValidationMiddleware('content', { max: 1000 }),
-  getBodyStringValidationMiddleware('blogId'),
+  getBodyStringValidationMiddleware('blogId')
+    .isMongoId()
+    .withMessage('ID is invalid'),
 ];
