@@ -79,24 +79,36 @@ describe('Blogs API', () => {
     it('should return [] when no blogs', async () => {
       const response = await request(app).get(PATH.BLOGS).expect(HttpStatus.Ok);
 
-      expect(response.body).toEqual([]);
+      expect(response.body).toEqual({
+        items: [],
+        page: 1,
+        pageSize: 10,
+        pagesCount: 0,
+        totalCount: 0,
+      });
     });
 
     it('should return list of blogs', async () => {
-      await request(app)
+      const { body: blog1 } = await request(app)
         .post(PATH.BLOGS)
         .set('Authorization', validAuth)
         .send(newBlog)
         .expect(HttpStatus.Created);
-      await request(app)
+      const { body: blog2 } = await request(app)
         .post(PATH.BLOGS)
         .set('Authorization', validAuth)
-        .send(newBlog)
+        .send(updatedBlog)
         .expect(HttpStatus.Created);
 
       const response = await request(app).get(PATH.BLOGS).expect(HttpStatus.Ok);
 
-      expect(response.body.length).toBe(2);
+      expect(response.body).toEqual({
+        items: [blog2, blog1],
+        page: 1,
+        pageSize: 10,
+        pagesCount: 1,
+        totalCount: 2,
+      });
     });
   });
 

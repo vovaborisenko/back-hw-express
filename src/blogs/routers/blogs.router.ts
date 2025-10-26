@@ -8,11 +8,17 @@ import { reqValidationResultMiddleware } from '../../core/middlewares/validation
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { blogDtoValidationMiddleware } from '../validation/blog-dto-validation.middleware';
 import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-admin-guard.middleware';
+import { queryBlogListValidationMiddleware } from '../validation/query-blog-list-validation.middleware';
 
 export const blogsRouter = Router({});
 
 blogsRouter
-  .get('/', getBlogListHandler)
+  .get(
+    '/',
+    queryBlogListValidationMiddleware,
+    reqValidationResultMiddleware,
+    getBlogListHandler,
+  )
 
   .post(
     '/',

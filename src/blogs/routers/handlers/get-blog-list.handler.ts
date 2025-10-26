@@ -1,13 +1,27 @@
 import { Request, Response } from 'express';
-import { blogsRepository } from '../../repositories/blogs.repository';
+import { matchedData } from 'express-validator';
 import { BlogViewModel } from '../../types/blog.view-model';
 import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
+import { Paginated } from '../../../core/types/paginated';
+import { QueryBlogList } from '../../input/query-blog-list';
+import { blogsService } from '../../application/blogs.service';
 
 export async function getBlogListHandler(
   req: Request,
-  res: Response<BlogViewModel[]>,
+  res: Response<Paginated<BlogViewModel[]>>,
 ) {
-  const blogs = (await blogsRepository.findAll()).map(mapToBlogViewModel);
+  const queryParams = matchedData<QueryBlogList>(req, {
+    locations: ['query'],
+    includeOptionals: true,
+  });
 
-  res.json(blogs);
+  const { items, totalCount } = await blogsService.findMany(queryParams);
+
+  res.json({
+    page: queryParams.pageNumber,
+    pageSize: queryParams.pageSize,
+    pagesCount: Math.ceil(totalCount / queryParams.pageSize),
+    totalCount,
+    items: items.map(mapToBlogViewModel),
+  });
 }
