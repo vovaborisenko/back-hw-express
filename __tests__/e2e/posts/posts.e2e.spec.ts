@@ -5,10 +5,25 @@ import { HttpStatus } from '../../../src/core/types/http-status';
 import { PostCreateDto } from '../../../src/posts/dto/post.create-dto';
 import { PostUpdateDto } from '../../../src/posts/dto/post.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
+import { runDB, stopDb } from '../../../src/db/mongo.db';
+import { SETTINGS } from '../../../src/core/settings/settings';
+import {
+  invalidAuth,
+  validAuth,
+  validMongoId,
+} from '../../../src/testing/constants/common';
 
 describe('Posts API', () => {
   const app = express();
   setupApp(app);
+
+  beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
+  });
+
+  afterAll(async () => {
+    await stopDb();
+  });
 
   const newPost: PostCreateDto = {
     title: 'Новые возможности TypeScript',
@@ -39,9 +54,7 @@ describe('Posts API', () => {
   };
 
   beforeEach(async () => {
-    await request(app)
-      .delete(`${PATH.TESTING}/all-data`)
-      .expect(HttpStatus.NoContent);
+    await request(app).delete(PATH.TESTING_CLEAR).expect(HttpStatus.NoContent);
 
     const { body: createdBlog1 } = await request(app)
       .post(PATH.BLOGS)
@@ -59,9 +72,6 @@ describe('Posts API', () => {
 
     updatedPost.blogId = createdBlog2.id;
   });
-
-  const validAuth = 'Basic ' + Buffer.from('admin:qwerty').toString('base64');
-  const invalidAuth = 'Basic ' + Buffer.from('wrong:wrong').toString('base64');
 
   it.each`
     path                  | method
@@ -86,6 +96,14 @@ describe('Posts API', () => {
   );
 
   describe(`POST ${PATH.POSTS}`, () => {
+    it('should return 400 if not exist blog', async () => {
+      await request(app)
+        .post(PATH.POSTS)
+        .set('Authorization', validAuth)
+        .send({ ...newPost, blogId: validMongoId })
+        .expect(HttpStatus.NotFound);
+    });
+
     it('should create', async () => {
       const response = await request(app)
         .post(PATH.POSTS)
@@ -124,7 +142,9 @@ describe('Posts API', () => {
 
   describe(`GET ${PATH.POSTS}/:id`, () => {
     it('should return 404 when no post', async () => {
-      await request(app).get(`${PATH.POSTS}/987`).expect(HttpStatus.NotFound);
+      await request(app)
+        .get(`${PATH.POSTS}/${validMongoId}`)
+        .expect(HttpStatus.NotFound);
     });
 
     it('should return post with requested id', async () => {
@@ -150,9 +170,23 @@ describe('Posts API', () => {
   describe(`PUT ${PATH.POSTS}/:id`, () => {
     it('should return 404 when no post', async () => {
       await request(app)
-        .put(`${PATH.POSTS}/987`)
+        .put(`${PATH.POSTS}/${validMongoId}`)
         .set('Authorization', validAuth)
         .send(updatedPost)
+        .expect(HttpStatus.NotFound);
+    });
+
+    it('should return 400 if not exist blog', async () => {
+      const { body: post1 } = await request(app)
+        .post(PATH.POSTS)
+        .set('Authorization', validAuth)
+        .send(newPost)
+        .expect(HttpStatus.Created);
+
+      await request(app)
+        .put(`${PATH.POSTS}/${post1.id}`)
+        .set('Authorization', validAuth)
+        .send({ ...newPost, blogId: validMongoId })
         .expect(HttpStatus.NotFound);
     });
 
@@ -190,7 +224,7 @@ describe('Posts API', () => {
   describe(`DELETE ${PATH.POSTS}/:id`, () => {
     it('should return 404 when no post', async () => {
       await request(app)
-        .delete(`${PATH.POSTS}/987`)
+        .delete(`${PATH.POSTS}/${validMongoId}`)
         .set('Authorization', validAuth)
         .expect(HttpStatus.NotFound);
     });

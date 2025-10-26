@@ -3,11 +3,11 @@ import { HttpStatus } from '../../../core/types/http-status';
 import { blogsRepository } from '../../repositories/blogs.repository';
 import { BlogUpdateDto } from '../../dto/blog.update-dto';
 
-export function updateBlogHandler(
+export async function updateBlogHandler(
   req: Request<{ id: string }, {}, BlogUpdateDto>,
   res: Response<undefined>,
 ) {
-  blogsRepository.update(req.params.id, req.body);
+  await blogsRepository.update(req.params.id, req.body);
 
   res.sendStatus(HttpStatus.NoContent);
 }

@@ -1,11 +1,9 @@
-export interface PostBase {
+export interface PostViewModel {
   id: string;
   title: string;
   shortDescription: string;
   content: string;
   blogId: string;
-}
-
-export interface Post extends PostBase {
   blogName: string | null;
+  createdAt: string;
 }
