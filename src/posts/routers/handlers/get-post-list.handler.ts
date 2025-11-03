@@ -1,19 +1,27 @@
 import { Request, Response } from 'express';
-import { postsRepository } from '../../repositories/posts.repository';
-import { blogsRepository } from '../../../blogs/repositories/blogs.repository';
+import { matchedData } from 'express-validator';
+import { postsService } from '../../application/posts.service';
 import { PostViewModel } from '../../types/post.view-model';
 import { mapToPostViewModel } from '../mappers/map-to-post-view-model';
+import { QueryPostList } from '../../input/query-post-list';
+import { Paginated } from '../../../core/types/paginated';
 
 export async function getPostListHandler(
   req: Request,
-  res: Response<PostViewModel[]>,
+  res: Response<Paginated<PostViewModel[]>>,
 ) {
-  const posts = await postsRepository.findAll();
-  const blogIds = posts.map(({ blogId }) => blogId);
-  const blogNamesById = await blogsRepository.findNamesByIds(blogIds);
-  const postViewModels = posts.map((post) =>
-    mapToPostViewModel(post, blogNamesById[post.blogId]),
-  );
+  const queryParams = matchedData<QueryPostList>(req, {
+    locations: ['query'],
+    includeOptionals: true,
+  });
+  const { items, totalCount } = await postsService.findMany(queryParams);
+  const postViewModels = items.map(mapToPostViewModel);
 
-  res.json(postViewModels);
+  res.json({
+    page: queryParams.pageNumber,
+    pageSize: queryParams.pageSize,
+    pagesCount: Math.ceil(totalCount / queryParams.pageSize),
+    totalCount,
+    items: postViewModels,
+  });
 }

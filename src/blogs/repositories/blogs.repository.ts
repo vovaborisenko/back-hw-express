@@ -3,10 +3,41 @@ import { Blog } from '../types/blog';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { blogCollection } from '../../db/mongo.db';
+import { QueryBlogList } from '../input/query-blog-list';
 
 export const blogsRepository = {
-  findAll(): Promise<WithId<Blog>[]> {
-    return blogCollection.find().toArray();
+  async findAll({
+    pageSize,
+    pageNumber,
+    searchNameTerm,
+    sortDirection,
+    sortBy,
+  }: QueryBlogList): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
+    const skip = pageSize * (pageNumber - 1);
+    let sort = {
+      [sortBy]: sortDirection,
+      _id: sortDirection,
+    };
+    const filter: any = {};
+
+    if (searchNameTerm) {
+      filter.name = { $regex: searchNameTerm, $options: 'i' };
+    }
+
+    if (sortBy === 'createdAt') {
+      sort = { _id: sortDirection };
+    }
+    const [items, totalCount] = await Promise.all([
+      blogCollection
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize)
+        .toArray(),
+      blogCollection.countDocuments(filter),
+    ]);
+
+    return { items, totalCount };
   },
 
   async findNamesByIds(
@@ -33,10 +64,10 @@ export const blogsRepository = {
     return blogCollection.findOne({ _id: new ObjectId(id) });
   },
 
-  async create(blog: Blog): Promise<WithId<Blog>> {
+  async create(blog: Blog): Promise<string> {
     const insertResult = await blogCollection.insertOne(blog);
 
-    return { ...blog, _id: insertResult.insertedId };
+    return insertResult.insertedId.toString();
   },
 
   async update(id: string, dto: BlogUpdateDto): Promise<void> {

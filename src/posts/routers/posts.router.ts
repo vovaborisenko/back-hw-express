@@ -8,11 +8,17 @@ import { reqValidationResultMiddleware } from '../../core/middlewares/validation
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { postDtoValidationMiddleware } from '../validation/post-dto-validation.middleware';
 import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-admin-guard.middleware';
+import { queryPostListValidationMiddleware } from '../validation/query-post-list-validation.middleware';
 
 export const postsRouter = Router({});
 
 postsRouter
-  .get('/', getPostListHandler)
+  .get(
+    '/',
+    queryPostListValidationMiddleware,
+    reqValidationResultMiddleware,
+    getPostListHandler,
+  )
 
   .post(
     '/',
