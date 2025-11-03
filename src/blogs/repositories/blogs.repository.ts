@@ -14,7 +14,10 @@ export const blogsRepository = {
     sortBy,
   }: QueryBlogList): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
     const skip = pageSize * (pageNumber - 1);
-    let sort = { [sortBy]: sortDirection };
+    let sort = {
+      [sortBy]: sortDirection,
+      _id: sortDirection,
+    };
     const filter: any = {};
 
     if (searchNameTerm) {

@@ -12,7 +12,11 @@ export const postsRepository = {
     blogId?: string,
   ): Promise<{ items: WithId<AggregatedPost>[]; totalCount: number }> {
     const skip = pageSize * (pageNumber - 1);
-    let sort = { [sortBy]: sortDirection === SortDirection.Desc ? -1 : 1 };
+    const sortOrder = sortDirection === SortDirection.Desc ? -1 : 1;
+    let sort = {
+      [sortBy]: sortOrder,
+      _id: sortOrder,
+    };
     const filter: any = {};
 
     if (blogId) {
