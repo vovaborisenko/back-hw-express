@@ -6,21 +6,29 @@ import { postCollection } from '../../db/mongo.db';
 import { QueryPostList } from '../input/query-post-list';
 
 export const postsRepository = {
-  async findAll({
-    pageSize,
-    pageNumber,
-    sortDirection,
-    sortBy,
-  }: QueryPostList): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+  async findAll(
+    { pageSize, pageNumber, sortDirection, sortBy }: QueryPostList,
+    blogId?: string,
+  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
     const skip = pageSize * (pageNumber - 1);
     let sort = { [sortBy]: sortDirection };
+    const filter: any = {};
+
+    if (blogId) {
+      filter.blogId = blogId;
+    }
 
     if (sortBy === 'createdAt') {
       sort = { _id: sortDirection };
     }
     const [items, totalCount] = await Promise.all([
-      postCollection.find().sort(sort).skip(skip).limit(pageSize).toArray(),
-      postCollection.countDocuments(),
+      postCollection
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize)
+        .toArray(),
+      postCollection.countDocuments(filter),
     ]);
 
     return { items, totalCount };

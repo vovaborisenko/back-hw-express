@@ -10,8 +10,9 @@ import { PostUpdateDto } from '../dto/post.update-dto';
 export const postsService = {
   findMany(
     queryDto: QueryPostList,
+    blogId?: string,
   ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
-    return postsRepository.findAll(queryDto);
+    return postsRepository.findAll(queryDto, blogId);
   },
 
   findById(id: string): Promise<WithId<Post> | null> {
