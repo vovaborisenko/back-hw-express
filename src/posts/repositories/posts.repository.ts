@@ -1,30 +1,31 @@
 import { ObjectId, WithId } from 'mongodb';
-import { Post } from '../types/post';
+import { AggregatedPost, Post } from '../types/post';
 import { PostUpdateDto } from '../dto/post.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
-import { postCollection } from '../../db/mongo.db';
+import { BLOG_COLLECTION_NAME, postCollection } from '../../db/mongo.db';
 import { QueryPostList } from '../input/query-post-list';
+import { SortDirection } from '../../core/types/sort-direction';
 
 export const postsRepository = {
   async findAll(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryPostList,
     blogId?: string,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+  ): Promise<{ items: WithId<AggregatedPost>[]; totalCount: number }> {
     const skip = pageSize * (pageNumber - 1);
-    let sort = { [sortBy]: sortDirection };
+    let sort = { [sortBy]: sortDirection === SortDirection.Desc ? -1 : 1 };
     const filter: any = {};
 
     if (blogId) {
-      filter.blogId = blogId;
+      filter.blogId = new ObjectId(blogId);
     }
 
-    if (sortBy === 'createdAt') {
-      sort = { _id: sortDirection };
-    }
     const [items, totalCount] = await Promise.all([
       postCollection
-        .find(filter)
-        .sort(sort)
+        .aggregate<WithId<AggregatedPost>>([
+          { $match: filter },
+          ...getBaseAggregation(),
+          { $sort: sort },
+        ])
         .skip(skip)
         .limit(pageSize)
         .toArray(),
@@ -34,8 +35,20 @@ export const postsRepository = {
     return { items, totalCount };
   },
 
-  findById(id: string): Promise<WithId<Post> | null> {
-    return postCollection.findOne({ _id: new ObjectId(id) });
+  async findById(id: string): Promise<WithId<AggregatedPost> | null> {
+    const [result] = await postCollection
+      .aggregate<WithId<AggregatedPost>>([
+        {
+          $match: {
+            _id: new ObjectId(id),
+          },
+        },
+        ...getBaseAggregation(),
+        { $limit: 1 },
+      ])
+      .toArray();
+
+    return result || null;
   },
 
   async create(post: Post): Promise<string> {
@@ -52,7 +65,7 @@ export const postsRepository = {
           title: dto.title,
           shortDescription: dto.shortDescription,
           content: dto.content,
-          blogId: dto.blogId,
+          blogId: new ObjectId(dto.blogId),
         },
       },
     );
@@ -72,3 +85,33 @@ export const postsRepository = {
     }
   },
 };
+
+function getBaseAggregation() {
+  return [
+    {
+      $lookup: {
+        from: BLOG_COLLECTION_NAME,
+        localField: 'blogId',
+        foreignField: '_id',
+        as: 'blog',
+      },
+    },
+    {
+      $unwind: {
+        path: '$blog',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        blogName: '$blog.name',
+        createdAt: { $toDate: '$_id' },
+      },
+    },
+    {
+      $project: {
+        blog: 0,
+      },
+    },
+  ];
+}

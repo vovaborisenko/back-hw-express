@@ -3,7 +3,7 @@ import { Blog } from '../blogs/types/blog';
 import { Post } from '../posts/types/post';
 import { SETTINGS } from '../core/settings/settings';
 
-const BLOG_COLLECTION_NAME = 'blogs';
+export const BLOG_COLLECTION_NAME = 'blogs';
 const POST_COLLECTION_NAME = 'posts';
 
 export let client: MongoClient;

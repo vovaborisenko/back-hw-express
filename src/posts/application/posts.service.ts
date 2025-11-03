@@ -1,6 +1,6 @@
-import { WithId } from 'mongodb';
+import { ObjectId, WithId } from 'mongodb';
 import { QueryPostList } from '../input/query-post-list';
-import { Post } from '../types/post';
+import { AggregatedPost } from '../types/post';
 import { postsRepository } from '../repositories/posts.repository';
 import { PostCreateDto } from '../dto/post.create-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
@@ -11,11 +11,11 @@ export const postsService = {
   findMany(
     queryDto: QueryPostList,
     blogId?: string,
-  ): Promise<{ items: WithId<Post>[]; totalCount: number }> {
+  ): Promise<{ items: WithId<AggregatedPost>[]; totalCount: number }> {
     return postsRepository.findAll(queryDto, blogId);
   },
 
-  findById(id: string): Promise<WithId<Post> | null> {
+  findById(id: string): Promise<WithId<AggregatedPost> | null> {
     return postsRepository.findById(id);
   },
 
@@ -30,7 +30,7 @@ export const postsService = {
       title: dto.title,
       shortDescription: dto.shortDescription,
       content: dto.content,
-      blogId: dto.blogId,
+      blogId: new ObjectId(dto.blogId),
     };
 
     return postsRepository.create(newPost);

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { matchedData } from 'express-validator';
 import { postsService } from '../../application/posts.service';
-import { blogsService } from '../../../blogs/application/blogs.service';
 import { PostViewModel } from '../../types/post.view-model';
 import { mapToPostViewModel } from '../mappers/map-to-post-view-model';
 import { QueryPostList } from '../../input/query-post-list';
@@ -16,11 +15,7 @@ export async function getPostListHandler(
     includeOptionals: true,
   });
   const { items, totalCount } = await postsService.findMany(queryParams);
-  const blogIds = items.map(({ blogId }) => blogId);
-  const blogNamesById = await blogsService.findNamesByIds(blogIds);
-  const postViewModels = items.map((post) =>
-    mapToPostViewModel(post, blogNamesById[post.blogId]),
-  );
+  const postViewModels = items.map(mapToPostViewModel);
 
   res.json({
     page: queryParams.pageNumber,

@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { postsService } from '../../application/posts.service';
-import { blogsService } from '../../../blogs/application/blogs.service';
 import { PostCreateDto } from '../../dto/post.create-dto';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../types/post.view-model';
@@ -17,9 +16,6 @@ export async function createPostHandler(
   if (!createdPost) {
     throw new NotExistError('Post');
   }
-  const blogMap = await blogsService.findNamesByIds([createdPost?.blogId]);
 
-  res
-    .status(HttpStatus.Created)
-    .json(mapToPostViewModel(createdPost, blogMap[createdPost?.blogId]));
+  res.status(HttpStatus.Created).json(mapToPostViewModel(createdPost));
 }

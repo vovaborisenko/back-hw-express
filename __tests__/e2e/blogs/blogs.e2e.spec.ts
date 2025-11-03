@@ -245,9 +245,21 @@ describe('Blogs API', () => {
     });
 
     describe(`GET ${PATH.BLOGS}/:id/posts`, () => {
-      it('should return Paginated<[]> when no posts', async () => {
-        const response = await request(app)
+      it('should return 404 if not exist blog', async () => {
+        await request(app)
           .get(`${PATH.BLOGS}/${validMongoId}/posts`)
+          .set('Authorization', validAuth)
+          .expect(HttpStatus.NotFound);
+      });
+
+      it('should return Paginated<[]> when no posts', async () => {
+        const { body: blog } = await request(app)
+          .post(PATH.BLOGS)
+          .set('Authorization', validAuth)
+          .send(newBlog)
+          .expect(HttpStatus.Created);
+        const response = await request(app)
+          .get(`${PATH.BLOGS}/${blog.id}/posts`)
           .expect(HttpStatus.Ok);
 
         expect(response.body).toEqual({

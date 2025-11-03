@@ -6,11 +6,18 @@ import { QueryPostList } from '../../../posts/input/query-post-list';
 import { postsService } from '../../../posts/application/posts.service';
 import { blogsService } from '../../application/blogs.service';
 import { mapToPostViewModel } from '../../../posts/routers/mappers/map-to-post-view-model';
+import { NotExistError } from '../../../core/errors/not-exist.error';
 
 export async function getBlogPostListHandler(
   req: Request<{ id: string }>,
   res: Response<Paginated<PostViewModel[]>>,
 ) {
+  const blog = await blogsService.findById(req.params.id);
+
+  if (!blog) {
+    throw new NotExistError('Blog');
+  }
+
   const queryParams = matchedData<QueryPostList>(req, {
     locations: ['query'],
     includeOptionals: true,
@@ -19,10 +26,7 @@ export async function getBlogPostListHandler(
     queryParams,
     req.params.id,
   );
-  const blogNamesById = await blogsService.findNamesByIds([req.params.id]);
-  const postViewModels = items.map((post) =>
-    mapToPostViewModel(post, blogNamesById[req.params.id]),
-  );
+  const postViewModels = items.map((post) => mapToPostViewModel(post));
 
   res.json({
     page: queryParams.pageNumber,
