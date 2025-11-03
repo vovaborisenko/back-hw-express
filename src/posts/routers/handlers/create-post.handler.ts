@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { postsRepository } from '../../repositories/posts.repository';
-import { blogsRepository } from '../../../blogs/repositories/blogs.repository';
+import { postsService } from '../../application/posts.service';
+import { blogsService } from '../../../blogs/application/blogs.service';
 import { PostCreateDto } from '../../dto/post.create-dto';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../types/post.view-model';
@@ -11,20 +11,15 @@ export async function createPostHandler(
   req: Request<{}, {}, PostCreateDto>,
   res: Response<PostViewModel>,
 ) {
-  const blog = await blogsRepository.findById(req.body.blogId);
+  const createdPostId = await postsService.create(req.body);
+  const createdPost = await postsService.findById(createdPostId);
 
-  if (!blog) {
-    throw new NotExistError('Blog');
+  if (!createdPost) {
+    throw new NotExistError('Post');
   }
+  const blogMap = await blogsService.findNamesByIds([createdPost?.blogId]);
 
-  const newPost = {
-    title: req.body.title,
-    shortDescription: req.body.shortDescription,
-    content: req.body.content,
-    blogId: req.body.blogId,
-  };
-
-  const createdPost = await postsRepository.create(newPost);
-
-  res.status(HttpStatus.Created).json(mapToPostViewModel(createdPost, blog));
+  res
+    .status(HttpStatus.Created)
+    .json(mapToPostViewModel(createdPost, blogMap[createdPost?.blogId]));
 }

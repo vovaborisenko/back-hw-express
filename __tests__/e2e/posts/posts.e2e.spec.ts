@@ -116,10 +116,16 @@ describe('Posts API', () => {
   });
 
   describe(`GET ${PATH.POSTS}`, () => {
-    it('should return [] when no posts', async () => {
+    it('should return Paginated<[]> when no posts', async () => {
       const response = await request(app).get(PATH.POSTS).expect(HttpStatus.Ok);
 
-      expect(response.body).toEqual([]);
+      expect(response.body).toEqual({
+        items: [],
+        page: 1,
+        pageSize: 10,
+        pagesCount: 0,
+        totalCount: 0,
+      });
     });
 
     it('should return list of posts', async () => {
@@ -136,7 +142,7 @@ describe('Posts API', () => {
 
       const response = await request(app).get(PATH.POSTS).expect(HttpStatus.Ok);
 
-      expect(response.body.length).toBe(2);
+      expect(response.body.items.length).toBe(2);
     });
   });
 
