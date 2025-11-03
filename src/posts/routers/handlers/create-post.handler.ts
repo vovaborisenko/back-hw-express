@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { postsService } from '../../application/posts.service';
+import { postsQueryRepository } from '../../repositories/posts.query-repository';
 import { PostCreateDto } from '../../dto/post.create-dto';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../types/post.view-model';
@@ -11,7 +12,7 @@ export async function createPostHandler(
   res: Response<PostViewModel>,
 ) {
   const createdPostId = await postsService.create(req.body);
-  const createdPost = await postsService.findById(createdPostId);
+  const createdPost = await postsQueryRepository.findById(createdPostId);
 
   if (!createdPost) {
     throw new NotExistError('Post');

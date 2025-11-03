@@ -1,26 +1,13 @@
-import { ObjectId, WithId } from 'mongodb';
-import { QueryPostList } from '../input/query-post-list';
-import { AggregatedPost } from '../types/post';
+import { ObjectId } from 'mongodb';
 import { postsRepository } from '../repositories/posts.repository';
 import { PostCreateDto } from '../dto/post.create-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
-import { blogsService } from '../../blogs/application/blogs.service';
 import { PostUpdateDto } from '../dto/post.update-dto';
+import { blogsQueryRepository } from '../../blogs/repositories/blogs.query-repository';
 
 export const postsService = {
-  findMany(
-    queryDto: QueryPostList,
-    blogId?: string,
-  ): Promise<{ items: WithId<AggregatedPost>[]; totalCount: number }> {
-    return postsRepository.findAll(queryDto, blogId);
-  },
-
-  findById(id: string): Promise<WithId<AggregatedPost> | null> {
-    return postsRepository.findById(id);
-  },
-
   async create(dto: PostCreateDto): Promise<string> {
-    const blog = await blogsService.findById(dto.blogId);
+    const blog = await blogsQueryRepository.findById(dto.blogId);
 
     if (!blog) {
       throw new NotExistError('Blog');

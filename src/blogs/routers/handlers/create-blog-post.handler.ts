@@ -3,6 +3,7 @@ import { HttpStatus } from '../../../core/types/http-status';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../../posts/types/post.view-model';
 import { postsService } from '../../../posts/application/posts.service';
+import { postsQueryRepository } from '../../../posts/repositories/posts.query-repository';
 import { mapToPostViewModel } from '../../../posts/routers/mappers/map-to-post-view-model';
 import { BlogPostCreateDto } from '../../dto/blog-post.create-dto';
 
@@ -14,7 +15,7 @@ export async function createBlogPostHandler(
     ...req.body,
     blogId: req.params.id,
   });
-  const createdPost = await postsService.findById(createdPostId);
+  const createdPost = await postsQueryRepository.findById(createdPostId);
 
   if (!createdPost) {
     throw new NotExistError('Post');
