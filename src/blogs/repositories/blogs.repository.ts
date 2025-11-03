@@ -24,14 +24,15 @@ export const blogsRepository = {
     if (sortBy === 'createdAt') {
       sort = { _id: sortDirection };
     }
-    const items = await blogCollection
-      .find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(pageSize)
-      .toArray();
-
-    const totalCount = await blogCollection.countDocuments(filter);
+    const [items, totalCount] = await Promise.all([
+      blogCollection
+        .find(filter)
+        .sort(sort)
+        .skip(skip)
+        .limit(pageSize)
+        .toArray(),
+      blogCollection.countDocuments(filter),
+    ]);
 
     return { items, totalCount };
   },
@@ -60,10 +61,10 @@ export const blogsRepository = {
     return blogCollection.findOne({ _id: new ObjectId(id) });
   },
 
-  async create(blog: Blog): Promise<WithId<Blog>> {
+  async create(blog: Blog): Promise<string> {
     const insertResult = await blogCollection.insertOne(blog);
 
-    return { ...blog, _id: insertResult.insertedId };
+    return insertResult.insertedId.toString();
   },
 
   async update(id: string, dto: BlogUpdateDto): Promise<void> {
