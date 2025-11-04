@@ -108,6 +108,84 @@ describe('Users API', () => {
     });
   });
 
+  describe(`GET ${PATH.USERS}`, () => {
+    it('should return items: [] when no users', async () => {
+      const response = await request(app)
+        .get(PATH.USERS)
+        .set('Authorization', validAuth)
+        .expect(HttpStatus.Ok);
+
+      expect(response.body).toEqual({
+        items: [],
+        page: 1,
+        pageSize: 10,
+        pagesCount: 0,
+        totalCount: 0,
+      });
+    });
+
+    describe('test query params', () => {
+      beforeEach(async () => {
+        await Promise.all([
+          request(app)
+            .post(PATH.USERS)
+            .set('Authorization', validAuth)
+            .send(newUser)
+            .expect(HttpStatus.Created),
+          request(app)
+            .post(PATH.USERS)
+            .set('Authorization', validAuth)
+            .send(newUser2)
+            .expect(HttpStatus.Created),
+        ]);
+      });
+
+      describe('pagination', () => {
+        it('default', async () => {
+          const response = await request(app)
+            .get(PATH.USERS)
+            .set('Authorization', validAuth)
+            .expect(HttpStatus.Ok);
+
+          expect(response.body).toMatchObject({
+            page: 1,
+            pageSize: 10,
+            pagesCount: 1,
+            totalCount: 2,
+          });
+        });
+
+        it('pageSize', async () => {
+          const response = await request(app)
+            .get(`${PATH.USERS}?pageSize=1`)
+            .set('Authorization', validAuth)
+            .expect(HttpStatus.Ok);
+
+          expect(response.body).toMatchObject({
+            page: 1,
+            pageSize: 1,
+            pagesCount: 2,
+            totalCount: 2,
+          });
+        });
+
+        it('pageSize = 99', async () => {
+          const response = await request(app)
+            .get(`${PATH.USERS}?pageSize=99`)
+            .set('Authorization', validAuth)
+            .expect(HttpStatus.Ok);
+
+          expect(response.body).toMatchObject({
+            page: 1,
+            pageSize: 99,
+            pagesCount: 1,
+            totalCount: 2,
+          });
+        });
+      });
+    });
+  });
+
   describe(`DELETE ${PATH.USERS}/:id`, () => {
     it('should return 400 when invalid id', async () => {
       await request(app)

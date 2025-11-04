@@ -6,13 +6,19 @@ import { getUserListHandler } from './handlers/get-user-list.handler';
 import { createUserHandler } from './handlers/create-user.handler';
 import { deleteUserHandler } from './handlers/delete-user.handler';
 import { userCreateDtoValidationMiddleware } from '../validation/user-create-dto-validation.middleware';
+import { queryUserListValidationMiddleware } from '../validation/query-user-list-validation.middleware';
 
 export const usersRouter = Router({});
 
 usersRouter
   .use(superAdminGuardMiddleware)
 
-  .get('/', getUserListHandler)
+  .get(
+    '/',
+    queryUserListValidationMiddleware,
+    reqValidationResultMiddleware,
+    getUserListHandler,
+  )
 
   .post(
     '/',
