@@ -1,6 +1,6 @@
+import { ObjectId } from 'mongodb';
 import { User } from '../types/user';
 import { userCollection } from '../../db/mongo.db';
-import { ObjectId } from 'mongodb';
 import { NotExistError } from '../../core/errors/not-exist.error';
 
 export const usersRepository = {

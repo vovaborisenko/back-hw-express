@@ -5,6 +5,7 @@ import { reqValidationResultMiddleware } from '../../core/middlewares/validation
 import { getUserListHandler } from './handlers/get-user-list.handler';
 import { createUserHandler } from './handlers/create-user.handler';
 import { deleteUserHandler } from './handlers/delete-user.handler';
+import { userCreateDtoValidationMiddleware } from '../validation/user-create-dto-validation.middleware';
 
 export const usersRouter = Router({});
 
@@ -13,7 +14,12 @@ usersRouter
 
   .get('/', getUserListHandler)
 
-  .post('/', createUserHandler)
+  .post(
+    '/',
+    userCreateDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    createUserHandler,
+  )
 
   .delete(
     '/:id',

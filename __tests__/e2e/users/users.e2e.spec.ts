@@ -31,9 +31,14 @@ describe('Users API', () => {
   });
 
   const newUser: UserCreateDto = {
-    login: 'myPerfectLogin',
+    login: 'myLogin',
     email: 'ask@rest.com',
     password: 'some#Strict@pass',
+  };
+  const newUser2: UserCreateDto = {
+    login: 'Login2',
+    email: 'seek@opt.de',
+    password: 'pass)(ssap',
   };
 
   it.each`
@@ -73,6 +78,34 @@ describe('Users API', () => {
         createdAt: expect.any(String),
       });
     });
+
+    it.each`
+      field
+      ${'login'}
+      ${'email'}
+    `('should throw 400 for the same $field', async ({ field }) => {
+      await request(app)
+        .post(PATH.USERS)
+        .set('Authorization', validAuth)
+        .send(newUser)
+        .expect(HttpStatus.Created);
+      const response = await request(app)
+        .post(PATH.USERS)
+        .set('Authorization', validAuth)
+        .send({
+          ...newUser2,
+          // @ts-ignore
+          [field]: newUser[field],
+        })
+        .expect(HttpStatus.BadRequest);
+
+      expect(
+        response.body.errorsMessages.find(
+          (error: { field: string }) => error.field === field,
+        ),
+      ).toBeTruthy();
+      expect(response.body.errorsMessages.length).toBe(1);
+    });
   });
 
   describe(`DELETE ${PATH.USERS}/:id`, () => {
@@ -99,7 +132,7 @@ describe('Users API', () => {
       const { body: user2 } = await request(app)
         .post(PATH.USERS)
         .set('Authorization', validAuth)
-        .send(newUser)
+        .send(newUser2)
         .expect(HttpStatus.Created);
 
       await request(app)
