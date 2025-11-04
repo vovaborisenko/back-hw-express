@@ -3,8 +3,8 @@ import { matchedData } from 'express-validator';
 import { Paginated } from '../../../core/types/paginated';
 import { PostViewModel } from '../../../posts/types/post.view-model';
 import { QueryPostList } from '../../../posts/input/query-post-list';
-import { postsService } from '../../../posts/application/posts.service';
-import { blogsService } from '../../application/blogs.service';
+import { blogsQueryRepository } from '../../repositories/blogs.query-repository';
+import { postsQueryRepository } from '../../../posts/repositories/posts.query-repository';
 import { mapToPostViewModel } from '../../../posts/routers/mappers/map-to-post-view-model';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 
@@ -12,7 +12,7 @@ export async function getBlogPostListHandler(
   req: Request<{ id: string }>,
   res: Response<Paginated<PostViewModel[]>>,
 ) {
-  const blog = await blogsService.findById(req.params.id);
+  const blog = await blogsQueryRepository.findById(req.params.id);
 
   if (!blog) {
     throw new NotExistError('Blog');
@@ -22,7 +22,7 @@ export async function getBlogPostListHandler(
     locations: ['query'],
     includeOptionals: true,
   });
-  const { items, totalCount } = await postsService.findMany(
+  const { items, totalCount } = await postsQueryRepository.findMany(
     queryParams,
     req.params.id,
   );

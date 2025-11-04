@@ -26,7 +26,9 @@ describe('Blogs API', () => {
   });
 
   beforeEach(async () => {
-    await request(app).delete(PATH.TESTING_CLEAR).expect(HttpStatus.NoContent);
+    await request(app)
+      .delete(PATH.TESTING_ALL_DATA)
+      .expect(HttpStatus.NoContent);
   });
 
   const newBlog: BlogCreateDto = {

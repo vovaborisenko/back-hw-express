@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { matchedData } from 'express-validator';
-import { postsService } from '../../application/posts.service';
+import { postsQueryRepository } from '../../repositories/posts.query-repository';
 import { PostViewModel } from '../../types/post.view-model';
 import { mapToPostViewModel } from '../mappers/map-to-post-view-model';
 import { QueryPostList } from '../../input/query-post-list';
@@ -14,7 +14,9 @@ export async function getPostListHandler(
     locations: ['query'],
     includeOptionals: true,
   });
-  const { items, totalCount } = await postsService.findMany(queryParams);
+  const { items, totalCount } =
+    await postsQueryRepository.findMany(queryParams);
+
   const postViewModels = items.map(mapToPostViewModel);
 
   res.json({
