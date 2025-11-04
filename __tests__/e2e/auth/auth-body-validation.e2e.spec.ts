@@ -46,7 +46,8 @@ describe('Auth API body validation', () => {
       async ({ field, value, message }) => {
         const response = await request(app)
           .post(`${PATH.AUTH}/login`)
-          .send({ ...loginData, [field]: value });
+          .send({ ...loginData, [field]: value })
+          .expect(HttpStatus.BadRequest);
 
         expect(
           response.body.errorsMessages.find(
