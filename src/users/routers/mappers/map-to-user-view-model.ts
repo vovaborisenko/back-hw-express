@@ -7,6 +7,6 @@ export function mapToUserViewModel(user: WithId<User>): UserViewModel {
     id: user._id.toString(),
     login: user.login,
     email: user.email,
-    createdAt: user._id.getTimestamp().toISOString(),
+    createdAt: user.createdAt.toISOString(),
   };
 }

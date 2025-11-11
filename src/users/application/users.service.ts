@@ -18,13 +18,13 @@ export const usersService = {
       return { field: 'email', message: 'email should be unique' };
     }
 
-    const passwordSalt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(dto.password, passwordSalt);
+    const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const newUser = {
       login: dto.login,
       email: dto.email,
       passwordHash: passwordHash,
+      createdAt: new Date(),
     };
 
     return usersRepository.create(newUser);

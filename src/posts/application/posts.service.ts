@@ -18,6 +18,7 @@ export const postsService = {
       shortDescription: dto.shortDescription,
       content: dto.content,
       blogId: new ObjectId(dto.blogId),
+      createdAt: new Date(),
     };
 
     return postsRepository.create(newPost);
