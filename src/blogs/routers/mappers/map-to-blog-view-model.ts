@@ -9,6 +9,6 @@ export function mapToBlogViewModel(blog: WithId<Blog>): BlogViewModel {
     description: blog.description,
     websiteUrl: blog.websiteUrl,
     isMembership: blog.isMembership,
-    createdAt: blog._id.getTimestamp().toISOString(),
+    createdAt: blog.createdAt.toISOString(),
   };
 }

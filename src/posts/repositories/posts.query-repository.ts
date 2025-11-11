@@ -73,7 +73,6 @@ function getBaseAggregation() {
     {
       $addFields: {
         blogName: '$blog.name',
-        createdAt: { $toDate: '$_id' },
       },
     },
     {

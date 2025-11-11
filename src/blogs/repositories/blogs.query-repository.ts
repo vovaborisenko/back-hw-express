@@ -12,7 +12,7 @@ export const blogsQueryRepository = {
     sortBy,
   }: QueryBlogList): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
     const skip = pageSize * (pageNumber - 1);
-    let sort = {
+    const sort = {
       [sortBy]: sortDirection,
       _id: sortDirection,
     };
@@ -22,9 +22,6 @@ export const blogsQueryRepository = {
       filter.name = { $regex: searchNameTerm, $options: 'i' };
     }
 
-    if (sortBy === 'createdAt') {
-      sort = { _id: sortDirection };
-    }
     const [items, totalCount] = await Promise.all([
       blogCollection
         .find(filter)

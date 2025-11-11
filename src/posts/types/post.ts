@@ -5,9 +5,9 @@ export interface Post {
   shortDescription: string;
   content: string;
   blogId: ObjectId;
+  createdAt: Date;
 }
 
 export interface AggregatedPost extends Post {
   blogName: string | null;
-  createdAt: Date;
 }

@@ -9,6 +9,7 @@ export const blogsService = {
       description: dto.description,
       websiteUrl: dto.websiteUrl,
       isMembership: false,
+      createdAt: new Date(),
     };
 
     return blogsRepository.create(newBlog);

@@ -3,4 +3,5 @@ export interface Blog {
   description: string;
   websiteUrl: string;
   isMembership: boolean;
+  createdAt: Date;
 }
