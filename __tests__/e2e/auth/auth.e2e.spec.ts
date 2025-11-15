@@ -43,27 +43,34 @@ describe('Auth API', () => {
         .expect(HttpStatus.Unauthorized);
     });
 
-    it('should return 204 when credentials is right', async () => {
-      await request(app)
+    it('should return 200 and accessToken when credentials is right', async () => {
+      const { body: user } = await request(app)
         .post(PATH.USERS)
         .set('Authorization', validAuth)
         .send(newUser)
         .expect(HttpStatus.Created);
 
-      await request(app)
-        .post(`${PATH.AUTH}/login`)
-        .send({
-          loginOrEmail: newUser.login,
-          password: newUser.password,
-        })
-        .expect(HttpStatus.NoContent);
-      await request(app)
-        .post(`${PATH.AUTH}/login`)
-        .send({
-          loginOrEmail: newUser.email,
-          password: newUser.password,
-        })
-        .expect(HttpStatus.NoContent);
+      const responses = await Promise.all([
+        request(app)
+          .post(`${PATH.AUTH}/login`)
+          .send({
+            loginOrEmail: newUser.login,
+            password: newUser.password,
+          })
+          .expect(HttpStatus.Ok),
+        request(app)
+          .post(`${PATH.AUTH}/login`)
+          .send({
+            loginOrEmail: newUser.email,
+            password: newUser.password,
+          })
+          .expect(HttpStatus.Ok),
+      ]);
+
+      responses.forEach(({ body: { accessToken } }) =>
+        // @ts-ignore
+        expect(jws.decode(accessToken)?.userId).toBe(user.id),
+      );
     });
   });
 });
