@@ -1,8 +1,8 @@
-import bcrypt from 'bcrypt';
 import { UserCreateDto } from '../dto/user.create-dto';
 import { usersRepository } from '../repositories/users.repository';
 import { usersQueryRepository } from '../repositories/users.query-repository';
 import { ValidationError } from '../../core/types/validation';
+import { bcryptService } from '../../auth/application/bcrypt.service';
 
 export const usersService = {
   async create(dto: UserCreateDto): Promise<string | ValidationError> {
@@ -18,7 +18,7 @@ export const usersService = {
       return { field: 'email', message: 'email should be unique' };
     }
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const passwordHash = await bcryptService.createHash(dto.password);
 
     const newUser = {
       login: dto.login,
