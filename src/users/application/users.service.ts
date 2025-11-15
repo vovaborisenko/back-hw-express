@@ -30,19 +30,6 @@ export const usersService = {
     return usersRepository.create(newUser);
   },
 
-  async checkCredentials(
-    loginOrEmail: string,
-    password: string,
-  ): Promise<boolean> {
-    const user = await usersQueryRepository.findByLoginOrEmail(loginOrEmail);
-
-    if (!user) {
-      return false;
-    }
-
-    return bcrypt.compare(password, user.passwordHash);
-  },
-
   delete(id: string): Promise<void> {
     return usersRepository.delete(id);
   },
