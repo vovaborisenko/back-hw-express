@@ -1,7 +1,7 @@
 import { Result, ResultStatus } from '../../core/types/result-object';
 import { WithId } from 'mongodb';
 import { User } from '../../users/types/user';
-import { usersQueryRepository } from '../../users/repositories/users.query-repository';
+import { usersRepository } from '../../users/repositories/users.repository';
 import { bcryptService } from './bcrypt.service';
 import { jwtService } from './jwt.service';
 
@@ -38,7 +38,7 @@ export const authService = {
     | Result<WithId<User>>
     | Result<null, ResultStatus.NotFound | ResultStatus.BadRequest>
   > {
-    const user = await usersQueryRepository.findByLoginOrEmail(loginOrEmail);
+    const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
 
     if (!user) {
       return {
