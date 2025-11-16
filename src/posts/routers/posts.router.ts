@@ -4,11 +4,16 @@ import { getPostHandler } from './handlers/get-post.handler';
 import { createPostHandler } from './handlers/create-post.handler';
 import { updatePostHandler } from './handlers/update-post.handler';
 import { deletePostHandler } from './handlers/delete-post.handler';
+import { getPostCommentListCommentHandler } from './handlers/get-post-comment-list.handler';
+import { createPostCommentHandler } from './handlers/create-post-comment.handler';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { postDtoValidationMiddleware } from '../validation/post-dto-validation.middleware';
+import { postCommentDtoValidationMiddleware } from '../validation/post-comment-dto-validation.middleware';
+import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
 import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-admin-guard.middleware';
 import { queryPostListValidationMiddleware } from '../validation/query-post-list-validation.middleware';
+import { queryCommentListValidationMiddleware } from '../../comments/validation/query-comment-list-validation.middleware';
 
 export const postsRouter = Router({});
 
@@ -50,4 +55,21 @@ postsRouter
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
     deletePostHandler,
+  )
+
+  .get(
+    '/:id/comments',
+    paramIdValidationMiddleware(),
+    queryCommentListValidationMiddleware,
+    reqValidationResultMiddleware,
+    getPostCommentListCommentHandler,
+  )
+
+  .post(
+    '/:id/comments',
+    accessTokenGuard,
+    paramIdValidationMiddleware(),
+    postCommentDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    createPostCommentHandler,
   );

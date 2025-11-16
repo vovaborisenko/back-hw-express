@@ -2,12 +2,14 @@ import request from 'supertest';
 import express from 'express';
 import { setupApp } from '../../../src/setup-app';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import { PostCreateDto } from '../../../src/posts/dto/post.create-dto';
-import { PostUpdateDto } from '../../../src/posts/dto/post.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
 import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
-import { validAuth } from '../../../src/testing/constants/common';
+import { validAuth } from '../constants/common';
+import { createBlogAndHisPost, postDto } from '../utils/post/post.util';
+import { createBlog } from '../utils/blog/blog.util';
+import { createUserAndLogin } from '../utils/user/user.util';
+import { commentDto } from '../utils/comment/comment.util';
 
 describe('Posts API body validation', () => {
   const app = express();
@@ -21,54 +23,10 @@ describe('Posts API body validation', () => {
     await stopDb();
   });
 
-  const newPost: PostCreateDto = {
-    title: 'Новые возможности TypeScript',
-    shortDescription: 'Обзор новых фич и улучшений в TypeScript',
-    content:
-      'TypeScript 5.0 представляет множество улучшений производительности и новые возможности...',
-    blogId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  };
-
-  const updatedPost: PostUpdateDto = {
-    title: 'React 18: Что нового?',
-    shortDescription: 'Знакомство с новыми возможностями React 18',
-    content:
-      'React 18 приносит революционные изменения в рендеринг приложений...',
-    blogId: 'b2c3d4e5-f6a7-890b-cdef-234567890123',
-  };
-
-  const blog1 = {
-    name: 'Tech Insights',
-    description: 'Latest news and trends in technology world',
-    websiteUrl: 'https://tech-insights.blog.com',
-  };
-
-  const blog2 = {
-    name: 'Web Development',
-    description: 'Learning JavaScript and modern frameworks',
-    websiteUrl: 'https://js-mastery.org',
-  };
-
   beforeEach(async () => {
     await request(app)
       .delete(PATH.TESTING_ALL_DATA)
       .expect(HttpStatus.NoContent);
-
-    const { body: createdBlog1 } = await request(app)
-      .post(PATH.BLOGS)
-      .set('Authorization', validAuth)
-      .send(blog1)
-      .expect(HttpStatus.Created);
-
-    newPost.blogId = createdBlog1.id;
-
-    const { body: createdBlog2 } = await request(app)
-      .post(PATH.BLOGS)
-      .set('Authorization', validAuth)
-      .send(blog2)
-      .expect(HttpStatus.Created);
-
-    updatedPost.blogId = createdBlog2.id;
   });
 
   describe(`POST ${PATH.POSTS}`, () => {
@@ -97,10 +55,11 @@ describe('Posts API body validation', () => {
     `(
       'should throw 400: field = $field, value = $value, message = $message',
       async ({ field, value, message }) => {
+        const blog = await createBlog(app);
         const response = await request(app)
           .post(PATH.POSTS)
           .set('Authorization', validAuth)
-          .send({ ...newPost, [field]: value })
+          .send({ ...postDto.create, blogId: blog.id, [field]: value })
           .expect(HttpStatus.BadRequest);
 
         expect(
@@ -138,16 +97,41 @@ describe('Posts API body validation', () => {
     `(
       'should throw 400: field = $field, value = $value, message = $message',
       async ({ field, value, message }) => {
-        const { body: post } = await request(app)
-          .post(PATH.POSTS)
-          .set('Authorization', validAuth)
-          .send(newPost)
-          .expect(HttpStatus.Created);
+        const [blog, post] = await createBlogAndHisPost(app);
 
         const response = await request(app)
           .put(`${PATH.POSTS}/${post.id}`)
           .set('Authorization', validAuth)
-          .send({ ...updatedPost, [field]: value })
+          .send({ ...postDto.update, blogId: blog.id, [field]: value })
+          .expect(HttpStatus.BadRequest);
+
+        expect(
+          response.body.errorsMessages.find(
+            (error: { field: string }) => error.field === field,
+          )?.message,
+        ).toBe(message);
+      },
+    );
+  });
+
+  describe(`POST ${PATH.POSTS}/:id/comments`, () => {
+    it.each`
+      field        | value              | message
+      ${'content'} | ${null}            | ${'content should be string'}
+      ${'content'} | ${5}               | ${'content should be string'}
+      ${'content'} | ${''}              | ${'Length of content should be between 20 and 300'}
+      ${'content'} | ${'    '}          | ${'Length of content should be between 20 and 300'}
+      ${'content'} | ${'4'.repeat(19)}  | ${'Length of content should be between 20 and 300'}
+      ${'content'} | ${'l'.repeat(301)} | ${'Length of content should be between 20 and 300'}
+    `(
+      'should throw 400: field = $field, value = $value, message = $message',
+      async ({ field, value, message }) => {
+        const { token } = await createUserAndLogin(app);
+        const [, post] = await createBlogAndHisPost(app);
+        const response = await request(app)
+          .post(`${PATH.POSTS}/${post.id}/comments`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ ...commentDto.create, [field]: value })
           .expect(HttpStatus.BadRequest);
 
         expect(

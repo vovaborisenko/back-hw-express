@@ -2,16 +2,22 @@ import request from 'supertest';
 import express from 'express';
 import { setupApp } from '../../../src/setup-app';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import { PostCreateDto } from '../../../src/posts/dto/post.create-dto';
-import { PostUpdateDto } from '../../../src/posts/dto/post.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
 import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
+import { invalidAuth, validAuth, validMongoId } from '../constants/common';
 import {
-  invalidAuth,
-  validAuth,
-  validMongoId,
-} from '../../../src/testing/constants/common';
+  createBlogAndHisPost,
+  createBlogAndHisPosts,
+  postDto,
+} from '../utils/post/post.util';
+import { createBlog } from '../utils/blog/blog.util';
+import {
+  commentDto,
+  createComment,
+  createComments,
+} from '../utils/comment/comment.util';
+import { createUserAndLogin } from '../utils/user/user.util';
 
 describe('Posts API', () => {
   const app = express();
@@ -25,54 +31,10 @@ describe('Posts API', () => {
     await stopDb();
   });
 
-  const newPost: PostCreateDto = {
-    title: 'Новые возможности TypeScript',
-    shortDescription: 'Обзор новых фич и улучшений в TypeScript',
-    content:
-      'TypeScript 5.0 представляет множество улучшений производительности и новые возможности...',
-    blogId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  };
-
-  const updatedPost: PostUpdateDto = {
-    title: 'React 18: Что нового?',
-    shortDescription: 'Знакомство с новыми возможностями React 18',
-    content:
-      'React 18 приносит революционные изменения в рендеринг приложений...',
-    blogId: 'b2c3d4e5-f6a7-890b-cdef-234567890123',
-  };
-
-  const blog1 = {
-    name: 'Tech Insights',
-    description: 'Latest news and trends in technology world',
-    websiteUrl: 'https://tech-insights.blog.com',
-  };
-
-  const blog2 = {
-    name: 'Web Development',
-    description: 'Learning JavaScript and modern frameworks',
-    websiteUrl: 'https://js-mastery.org',
-  };
-
   beforeEach(async () => {
     await request(app)
       .delete(PATH.TESTING_ALL_DATA)
       .expect(HttpStatus.NoContent);
-
-    const { body: createdBlog1 } = await request(app)
-      .post(PATH.BLOGS)
-      .set('Authorization', validAuth)
-      .send(blog1)
-      .expect(HttpStatus.Created);
-
-    newPost.blogId = createdBlog1.id;
-
-    const { body: createdBlog2 } = await request(app)
-      .post(PATH.BLOGS)
-      .set('Authorization', validAuth)
-      .send(blog2)
-      .expect(HttpStatus.Created);
-
-    updatedPost.blogId = createdBlog2.id;
   });
 
   it.each`
@@ -102,18 +64,20 @@ describe('Posts API', () => {
       await request(app)
         .post(PATH.POSTS)
         .set('Authorization', validAuth)
-        .send({ ...newPost, blogId: validMongoId })
+        .send({ ...postDto.create, blogId: validMongoId })
         .expect(HttpStatus.NotFound);
     });
 
     it('should create', async () => {
-      const response = await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
+      const [blog, post] = await createBlogAndHisPost(app);
 
-      expect(response.body).toMatchObject(newPost);
+      expect(post).toEqual({
+        ...postDto.create,
+        blogId: blog.id,
+        blogName: blog.name,
+        id: expect.any(String),
+        createdAt: expect.any(String),
+      });
     });
   });
 
@@ -131,16 +95,7 @@ describe('Posts API', () => {
     });
 
     it('should return list of posts', async () => {
-      await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
-      await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
+      await createBlogAndHisPosts(2, app);
 
       const response = await request(app).get(PATH.POSTS).expect(HttpStatus.Ok);
 
@@ -156,76 +111,56 @@ describe('Posts API', () => {
     });
 
     it('should return post with requested id', async () => {
-      await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
-      const { body: post2 } = await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
+      const [, posts] = await createBlogAndHisPosts(2, app);
 
       const response = await request(app)
-        .get(`${PATH.POSTS}/${post2.id}`)
+        .get(`${PATH.POSTS}/${posts[1].id}`)
         .expect(HttpStatus.Ok);
 
-      expect(response.body).toEqual(post2);
+      expect(response.body).toEqual(posts[1]);
     });
   });
 
   describe(`PUT ${PATH.POSTS}/:id`, () => {
     it('should return 404 when no post', async () => {
+      const blog = await createBlog(app);
       await request(app)
         .put(`${PATH.POSTS}/${validMongoId}`)
         .set('Authorization', validAuth)
-        .send(updatedPost)
+        .send({ ...postDto.update, blogId: blog.id })
         .expect(HttpStatus.NotFound);
     });
 
     it('should return 400 if not exist blog', async () => {
-      const { body: post1 } = await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
+      const [, post] = await createBlogAndHisPost(app);
 
       await request(app)
-        .put(`${PATH.POSTS}/${post1.id}`)
+        .put(`${PATH.POSTS}/${post.id}`)
         .set('Authorization', validAuth)
-        .send({ ...newPost, blogId: validMongoId })
+        .send({ ...postDto.create, blogId: validMongoId })
         .expect(HttpStatus.NotFound);
     });
 
     it('should return 204 when requested id exist', async () => {
-      const { body: post1 } = await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
-      const { body: post2 } = await request(app)
-        .post(PATH.POSTS)
-        .set('Authorization', validAuth)
-        .send(newPost)
-        .expect(HttpStatus.Created);
+      const [blog, [post1, post2]] = await createBlogAndHisPosts(2, app);
+      const editedPost = { ...postDto.update, blogId: blog.id };
 
       await request(app)
         .put(`${PATH.POSTS}/${post1.id}`)
         .set('Authorization', validAuth)
-        .send({ ...updatedPost, title: 'updated title' })
+        .send({ ...editedPost, title: 'updated title' })
         .expect(HttpStatus.NoContent);
       await request(app)
         .put(`${PATH.POSTS}/${post2.id}`)
         .set('Authorization', validAuth)
-        .send(updatedPost)
+        .send(editedPost)
         .expect(HttpStatus.NoContent);
 
       const response = await request(app)
         .get(`${PATH.POSTS}/${post2.id}`)
         .expect(HttpStatus.Ok);
 
-      expect(response.body).toMatchObject(updatedPost);
+      expect(response.body).toMatchObject(editedPost);
     });
   });
 
@@ -238,21 +173,93 @@ describe('Posts API', () => {
     });
 
     it('should return 204 when requested id exist', async () => {
-      await request(app)
-        .post(PATH.POSTS)
-        .send(newPost)
-        .set('Authorization', validAuth)
-        .expect(HttpStatus.Created);
-      const { body: post2 } = await request(app)
-        .post(PATH.POSTS)
-        .send(newPost)
-        .set('Authorization', validAuth)
-        .expect(HttpStatus.Created);
+      const [, [, post2]] = await createBlogAndHisPosts(2, app);
 
       await request(app)
         .delete(`${PATH.POSTS}/${post2.id}`)
         .set('Authorization', validAuth)
         .expect(HttpStatus.NoContent);
+    });
+  });
+
+  describe(`POST ${PATH.POSTS}/:id/comments`, () => {
+    it('should return 401 when no accessToken', async () => {
+      const [, post] = await createBlogAndHisPost(app);
+      await request(app)
+        .post(`${PATH.POSTS}/${post.id}/comments`)
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 404 when no post whit that id', async () => {
+      const { token } = await createUserAndLogin(app);
+      const [, post] = await createBlogAndHisPost(app);
+      await request(app)
+        .delete(`${PATH.POSTS}/${post.id}`)
+        .set('Authorization', validAuth)
+        .expect(HttpStatus.NoContent);
+      await request(app)
+        .post(`${PATH.POSTS}/${post.id}/comments`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(commentDto.create)
+        .expect(HttpStatus.NotFound);
+    });
+
+    it('should create comment', async () => {
+      const [comment, , , user] = await createComment(app, commentDto.create);
+
+      expect(comment).toEqual({
+        ...commentDto.create,
+        commentatorInfo: {
+          userId: user.id,
+          userLogin: user.login,
+        },
+        id: expect.any(String),
+        createdAt: expect.any(String),
+      });
+    });
+  });
+
+  describe(`GET ${PATH.POSTS}/:id/comments`, () => {
+    it('should return 404 when no post whit that id', async () => {
+      const [, post] = await createBlogAndHisPost(app);
+      await request(app)
+        .delete(`${PATH.POSTS}/${post.id}`)
+        .set('Authorization', validAuth)
+        .expect(HttpStatus.NoContent);
+      await request(app)
+        .get(`${PATH.POSTS}/${post.id}/comments`)
+        .expect(HttpStatus.NotFound);
+    });
+
+    it('should return Paginated<[]> when no comments', async () => {
+      const [, post] = await createBlogAndHisPost(app);
+      const response = await request(app)
+        .get(`${PATH.POSTS}/${post.id}/comments`)
+        .expect(HttpStatus.Ok);
+
+      expect(response.body).toEqual({
+        items: [],
+        page: 1,
+        pageSize: 10,
+        pagesCount: 0,
+        totalCount: 0,
+      });
+    });
+
+    it('should return list of comments', async () => {
+      const [, post] = await createComments(2, app);
+
+      const response = await request(app)
+        .get(`${PATH.POSTS}/${post.id}/comments`)
+        .expect(HttpStatus.Ok);
+
+      expect(response.body.items.length).toBe(2);
+      expect(response.body).toMatchObject({
+        page: 1,
+        pageSize: 10,
+        pagesCount: 1,
+        totalCount: 2,
+      });
     });
   });
 });

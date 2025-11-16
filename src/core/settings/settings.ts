@@ -6,4 +6,7 @@ export const SETTINGS = {
 
   AC_SECRET: process.env.AC_SECRET || 'some-secretest-key',
   AC_TIME: process.env.AC_TIME || '1h',
+
+  ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'qwerty',
 };

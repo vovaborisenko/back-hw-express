@@ -6,8 +6,8 @@ import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import { UserCreateDto } from '../../../src/users/dto/user.create-dto';
-import { validAuth } from '../../../src/testing/constants/common';
+import { validAuth } from '../constants/common';
+import { createUserAndLogin } from '../utils/user/user.util';
 
 describe('Auth API', () => {
   const app = express();
@@ -27,12 +27,6 @@ describe('Auth API', () => {
       .expect(HttpStatus.NoContent);
   });
 
-  const newUser: UserCreateDto = {
-    login: 'Login2',
-    email: 'seek@opt.de',
-    password: 'pass)(ssap',
-  };
-
   describe(`POST ${PATH.AUTH}/login`, () => {
     it('should return 401 if login or password is wrong', async () => {
       await request(app)
@@ -45,33 +39,10 @@ describe('Auth API', () => {
     });
 
     it('should return 200 and accessToken when credentials is right', async () => {
-      const { body: user } = await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser)
-        .expect(HttpStatus.Created);
+      const { user, token } = await createUserAndLogin(app);
 
-      const responses = await Promise.all([
-        request(app)
-          .post(`${PATH.AUTH}/login`)
-          .send({
-            loginOrEmail: newUser.login,
-            password: newUser.password,
-          })
-          .expect(HttpStatus.Ok),
-        request(app)
-          .post(`${PATH.AUTH}/login`)
-          .send({
-            loginOrEmail: newUser.email,
-            password: newUser.password,
-          })
-          .expect(HttpStatus.Ok),
-      ]);
-
-      responses.forEach(({ body: { accessToken } }) =>
-        // @ts-ignore
-        expect(jws.decode(accessToken)?.userId).toBe(user.id),
-      );
+      // @ts-ignore
+      expect(jws.decode(token)?.userId).toBe(user.id);
     });
   });
 
@@ -88,55 +59,25 @@ describe('Auth API', () => {
     });
 
     it('should return 401 if accessToken is right but user is deleted', async () => {
-      const {
-        body: { id: userId },
-      } = await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser)
-        .expect(HttpStatus.Created);
-
-      const {
-        body: { accessToken },
-      } = await request(app)
-        .post(`${PATH.AUTH}/login`)
-        .send({
-          loginOrEmail: newUser.login,
-          password: newUser.password,
-        })
-        .expect(HttpStatus.Ok);
+      const { user, token } = await createUserAndLogin(app);
 
       await request(app)
-        .delete(`${PATH.USERS}/${userId}`)
+        .delete(`${PATH.USERS}/${user.id}`)
         .set('Authorization', validAuth)
         .expect(HttpStatus.NoContent);
 
       await request(app)
         .get(`${PATH.AUTH}/me`)
-        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(HttpStatus.Unauthorized);
     });
 
     it('should return 200 and me view model if accessToken is correct', async () => {
-      const { body: user } = await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser)
-        .expect(HttpStatus.Created);
-
-      const {
-        body: { accessToken },
-      } = await request(app)
-        .post(`${PATH.AUTH}/login`)
-        .send({
-          loginOrEmail: newUser.login,
-          password: newUser.password,
-        })
-        .expect(HttpStatus.Ok);
+      const { user, token } = await createUserAndLogin(app);
 
       const { body: me } = await request(app)
         .get(`${PATH.AUTH}/me`)
-        .set('Authorization', `Bearer ${accessToken}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(HttpStatus.Ok);
 
       expect(me).toEqual({

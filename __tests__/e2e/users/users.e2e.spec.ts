@@ -5,12 +5,8 @@ import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import {
-  invalidAuth,
-  validAuth,
-  validMongoId,
-} from '../../../src/testing/constants/common';
-import { UserCreateDto } from '../../../src/users/dto/user.create-dto';
+import { invalidAuth, validAuth, validMongoId } from '../constants/common';
+import { createUser, createUsers, userDto } from '../utils/user/user.util';
 
 describe('Users API', () => {
   const app = express();
@@ -29,17 +25,6 @@ describe('Users API', () => {
       .delete(PATH.TESTING_ALL_DATA)
       .expect(HttpStatus.NoContent);
   });
-
-  const newUser: UserCreateDto = {
-    login: 'myLogin',
-    email: 'ask@rest.com',
-    password: 'some#Strict@pass',
-  };
-  const newUser2: UserCreateDto = {
-    login: 'Login2',
-    email: 'seek@opt.de',
-    password: 'pass)(ssap',
-  };
 
   it.each`
     path                  | method
@@ -65,16 +50,12 @@ describe('Users API', () => {
 
   describe(`POST ${PATH.USERS}`, () => {
     it('should create', async () => {
-      const response = await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser)
-        .expect(HttpStatus.Created);
+      const user = await createUser(app, userDto.create[0]);
 
-      expect(response.body).toMatchObject({
+      expect(user).toMatchObject({
         id: expect.any(String),
-        login: newUser.login,
-        email: newUser.email,
+        login: userDto.create[0].login,
+        email: userDto.create[0].email,
         createdAt: expect.any(String),
       });
     });
@@ -84,18 +65,15 @@ describe('Users API', () => {
       ${'login'}
       ${'email'}
     `('should throw 400 for the same $field', async ({ field }) => {
-      await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser)
-        .expect(HttpStatus.Created);
+      await createUser(app, userDto.create[0]);
+
       const response = await request(app)
         .post(PATH.USERS)
         .set('Authorization', validAuth)
         .send({
-          ...newUser2,
+          ...userDto.create[1],
           // @ts-ignore
-          [field]: newUser[field],
+          [field]: userDto.create[0][field],
         })
         .expect(HttpStatus.BadRequest);
 
@@ -126,18 +104,7 @@ describe('Users API', () => {
 
     describe('test query params', () => {
       beforeEach(async () => {
-        await Promise.all([
-          request(app)
-            .post(PATH.USERS)
-            .set('Authorization', validAuth)
-            .send(newUser)
-            .expect(HttpStatus.Created),
-          request(app)
-            .post(PATH.USERS)
-            .set('Authorization', validAuth)
-            .send(newUser2)
-            .expect(HttpStatus.Created),
-        ]);
+        await createUsers(2, app);
       });
 
       describe('pagination', () => {
@@ -202,16 +169,7 @@ describe('Users API', () => {
     });
 
     it('should return 204 when requested id exist', async () => {
-      await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser)
-        .expect(HttpStatus.Created);
-      const { body: user2 } = await request(app)
-        .post(PATH.USERS)
-        .set('Authorization', validAuth)
-        .send(newUser2)
-        .expect(HttpStatus.Created);
+      const [, user2] = await createUsers(2, app);
 
       await request(app)
         .delete(`${PATH.USERS}/${user2.id}`)
