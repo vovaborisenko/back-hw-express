@@ -2,12 +2,11 @@ import request from 'supertest';
 import express from 'express';
 import { setupApp } from '../../../src/setup-app';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import { BlogCreateDto } from '../../../src/blogs/dto/blog.create-dto';
-import { BlogUpdateDto } from '../../../src/blogs/dto/blog.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
 import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
-import { validAuth } from '../../../src/testing/constants/common';
+import { validAuth } from '../constants/common';
+import { blogDto, createBlog } from '../utils/blog/blog.util';
 
 describe('Blogs API body validation', () => {
   const app = express();
@@ -26,18 +25,6 @@ describe('Blogs API body validation', () => {
       .delete(PATH.TESTING_ALL_DATA)
       .expect(HttpStatus.NoContent);
   });
-
-  const newBlog: BlogCreateDto = {
-    name: 'Tech Insights',
-    description: 'Latest news and trends in technology world',
-    websiteUrl: 'https://tech-insights.blog.com',
-  };
-
-  const updatedBlog: BlogUpdateDto = {
-    name: 'Web Guide',
-    description: 'Helpful articles and tutorials on web development',
-    websiteUrl: 'https://webdev-guide.dev',
-  };
 
   describe(`POST ${PATH.BLOGS}`, () => {
     it.each`
@@ -63,7 +50,7 @@ describe('Blogs API body validation', () => {
         const response = await request(app)
           .post(PATH.BLOGS)
           .set('Authorization', validAuth)
-          .send({ ...newBlog, [field]: value })
+          .send({ ...blogDto.create, [field]: value })
           .expect(HttpStatus.BadRequest);
 
         expect(
@@ -96,16 +83,12 @@ describe('Blogs API body validation', () => {
     `(
       'should throw 400: field = $field, value = $value, message = $message',
       async ({ field, value, message }) => {
-        const { body: blog } = await request(app)
-          .post(PATH.BLOGS)
-          .set('Authorization', validAuth)
-          .send(newBlog)
-          .expect(HttpStatus.Created);
+        const blog = await createBlog(app);
 
         const response = await request(app)
           .put(`${PATH.BLOGS}/${blog.id}`)
           .set('Authorization', validAuth)
-          .send({ ...updatedBlog, [field]: value })
+          .send({ ...blogDto.update, [field]: value })
           .expect(HttpStatus.BadRequest);
 
         expect(

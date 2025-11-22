@@ -3,11 +3,11 @@ import { postsRepository } from '../repositories/posts.repository';
 import { PostCreateDto } from '../dto/post.create-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { PostUpdateDto } from '../dto/post.update-dto';
-import { blogsQueryRepository } from '../../blogs/repositories/blogs.query-repository';
+import { blogsRepository } from '../../blogs/repositories/blogs.repository';
 
 export const postsService = {
   async create(dto: PostCreateDto): Promise<string> {
-    const blog = await blogsQueryRepository.findById(dto.blogId);
+    const blog = await blogsRepository.findById(dto.blogId);
 
     if (!blog) {
       throw new NotExistError('Blog');

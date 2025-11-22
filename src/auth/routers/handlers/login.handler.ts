@@ -1,22 +1,28 @@
 import { Request, Response } from 'express';
 import { LoginDto } from '../../dto/login.dto';
 import { HttpStatus } from '../../../core/types/http-status';
-import { usersService } from '../../../users/application/users.service';
+import { authService } from '../../application/auth.service';
+import { ResultStatus } from '../../../core/types/result-object';
+import { resultStatusToHttpStatus } from '../../../core/utils/result-status-to-http-status';
+import { createErrorMessages } from '../../../core/utils/create-error-message';
+import { ErrorMessages } from '../../../core/types/validation';
 
 export async function loginHandler(
   req: Request<{}, {}, LoginDto>,
-  res: Response,
+  res: Response<ErrorMessages | { accessToken: string }>,
 ): Promise<void> {
-  const isValid = await usersService.checkCredentials(
+  const result = await authService.login(
     req.body.loginOrEmail,
     req.body.password,
   );
 
-  if (isValid) {
-    res.sendStatus(HttpStatus.NoContent);
+  if (result.status !== ResultStatus.Success) {
+    res
+      .status(resultStatusToHttpStatus(result.status))
+      .send(createErrorMessages(result.extensions));
 
     return;
   }
 
-  res.sendStatus(HttpStatus.Unauthorized);
+  res.status(HttpStatus.Ok).send(result.data);
 }

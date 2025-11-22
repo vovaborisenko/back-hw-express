@@ -6,7 +6,8 @@ import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
 import { UserCreateDto } from '../../../src/users/dto/user.create-dto';
-import { validAuth } from '../../../src/testing/constants/common';
+import { validAuth } from '../constants/common';
+import { userDto } from '../utils/user/user.util';
 
 describe('Users API body validation', () => {
   const app = express();
@@ -26,11 +27,6 @@ describe('Users API body validation', () => {
       .expect(HttpStatus.NoContent);
   });
 
-  const userData: UserCreateDto = {
-    login: 'myLogin',
-    email: 'ask@rest.com',
-    password: 'some#Strict@pass',
-  };
   const longPassword = 'asff-awf+asws@ASDf$f#';
 
   describe(`POST ${PATH.USERS}`, () => {
@@ -62,7 +58,7 @@ describe('Users API body validation', () => {
         const response = await request(app)
           .post(PATH.USERS)
           .set('Authorization', validAuth)
-          .send({ ...userData, [field]: value })
+          .send({ ...userDto.create[0], [field]: value })
           .expect(HttpStatus.BadRequest);
 
         expect(

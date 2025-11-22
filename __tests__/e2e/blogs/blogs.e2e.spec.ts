@@ -2,16 +2,11 @@ import request from 'supertest';
 import express from 'express';
 import { setupApp } from '../../../src/setup-app';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import { BlogCreateDto } from '../../../src/blogs/dto/blog.create-dto';
-import { BlogUpdateDto } from '../../../src/blogs/dto/blog.update-dto';
 import { PATH } from '../../../src/core/paths/paths';
 import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
-import {
-  invalidAuth,
-  validAuth,
-  validMongoId,
-} from '../../../src/testing/constants/common';
+import { invalidAuth, validAuth, validMongoId } from '../constants/common';
+import { blogDto, createBlog, createBlogs } from '../utils/blog/blog.util';
 
 describe('Blogs API', () => {
   const app = express();
@@ -30,18 +25,6 @@ describe('Blogs API', () => {
       .delete(PATH.TESTING_ALL_DATA)
       .expect(HttpStatus.NoContent);
   });
-
-  const newBlog: BlogCreateDto = {
-    name: 'Tech Insights',
-    description: 'Latest news and trends in technology world',
-    websiteUrl: 'https://tech-insights.blog.com',
-  };
-
-  const updatedBlog: BlogUpdateDto = {
-    name: 'Web Guide',
-    description: 'Helpful articles and tutorials on web development',
-    websiteUrl: 'https://webdev-guide.dev',
-  };
 
   it.each`
     path                        | method
@@ -68,13 +51,14 @@ describe('Blogs API', () => {
 
   describe(`POST ${PATH.BLOGS}`, () => {
     it('should create', async () => {
-      const response = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
+      const blog = await createBlog(app, blogDto.create);
 
-      expect(response.body).toMatchObject(newBlog);
+      expect(blog).toEqual({
+        ...blogDto.create,
+        isMembership: false,
+        id: expect.any(String),
+        createdAt: expect.any(String),
+      });
     });
   });
 
@@ -92,17 +76,7 @@ describe('Blogs API', () => {
     });
 
     it('should return list of blogs', async () => {
-      const { body: blog1 } = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
-      const { body: blog2 } = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(updatedBlog)
-        .expect(HttpStatus.Created);
-
+      const [blog1, blog2] = await createBlogs(2, app);
       const response = await request(app).get(PATH.BLOGS).expect(HttpStatus.Ok);
 
       expect(response.body).toEqual({
@@ -123,16 +97,7 @@ describe('Blogs API', () => {
     });
 
     it('should return blog with requested id', async () => {
-      await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
-      const { body: blog2 } = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
+      const [, blog2] = await createBlogs(2, app);
 
       const response = await request(app)
         .get(`${PATH.BLOGS}/${blog2.id}`)
@@ -147,38 +112,29 @@ describe('Blogs API', () => {
       await request(app)
         .put(`${PATH.BLOGS}/${validMongoId}`)
         .set('Authorization', validAuth)
-        .send(updatedBlog)
+        .send(blogDto.update)
         .expect(HttpStatus.NotFound);
     });
 
     it('should return 204 when requested id exist', async () => {
-      const { body: blog1 } = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
-      const { body: blog2 } = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
+      const [blog1, blog2] = await createBlogs(2, app);
 
       await request(app)
         .put(`${PATH.BLOGS}/${blog1.id}`)
         .set('Authorization', validAuth)
-        .send({ ...updatedBlog, minAgeRestriction: null })
+        .send({ ...blogDto.update, minAgeRestriction: null })
         .expect(HttpStatus.NoContent);
       await request(app)
         .put(`${PATH.BLOGS}/${blog2.id}`)
         .set('Authorization', validAuth)
-        .send(updatedBlog)
+        .send(blogDto.update)
         .expect(HttpStatus.NoContent);
 
       const response = await request(app)
         .get(`${PATH.BLOGS}/${blog2.id}`)
         .expect(HttpStatus.Ok);
 
-      expect(response.body).toMatchObject(updatedBlog);
+      expect(response.body).toMatchObject(blogDto.update);
     });
   });
 
@@ -191,16 +147,7 @@ describe('Blogs API', () => {
     });
 
     it('should return 204 when requested id exist', async () => {
-      await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
-      const { body: blog2 } = await request(app)
-        .post(PATH.BLOGS)
-        .set('Authorization', validAuth)
-        .send(newBlog)
-        .expect(HttpStatus.Created);
+      const [, blog2] = await createBlogs(2, app);
 
       await request(app)
         .delete(`${PATH.BLOGS}/${blog2.id}`)
@@ -227,11 +174,7 @@ describe('Blogs API', () => {
       });
 
       it('should create', async () => {
-        const { body: blog } = await request(app)
-          .post(PATH.BLOGS)
-          .set('Authorization', validAuth)
-          .send(newBlog)
-          .expect(HttpStatus.Created);
+        const blog = await createBlog(app);
         const response = await request(app)
           .post(`${PATH.BLOGS}/${blog.id}/posts`)
           .set('Authorization', validAuth)
@@ -255,11 +198,7 @@ describe('Blogs API', () => {
       });
 
       it('should return Paginated<[]> when no posts', async () => {
-        const { body: blog } = await request(app)
-          .post(PATH.BLOGS)
-          .set('Authorization', validAuth)
-          .send(newBlog)
-          .expect(HttpStatus.Created);
+        const blog = await createBlog(app);
         const response = await request(app)
           .get(`${PATH.BLOGS}/${blog.id}/posts`)
           .expect(HttpStatus.Ok);
@@ -274,16 +213,8 @@ describe('Blogs API', () => {
       });
 
       it('should return list of posts', async () => {
-        const { body: blog } = await request(app)
-          .post(PATH.BLOGS)
-          .set('Authorization', validAuth)
-          .send(newBlog)
-          .expect(HttpStatus.Created);
-        const { body: blog2 } = await request(app)
-          .post(PATH.BLOGS)
-          .set('Authorization', validAuth)
-          .send({ ...newBlog, name: 'Blog2' })
-          .expect(HttpStatus.Created);
+        const [blog, blog2] = await createBlogs(2, app);
+
         await request(app)
           .post(`${PATH.BLOGS}/${blog.id}/posts`)
           .set('Authorization', validAuth)

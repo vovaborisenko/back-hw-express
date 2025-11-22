@@ -1,10 +1,14 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId, WithId } from 'mongodb';
 import { Post } from '../types/post';
 import { PostUpdateDto } from '../dto/post.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { postCollection } from '../../db/mongo.db';
 
 export const postsRepository = {
+  findById(id: string): Promise<WithId<Post> | null> {
+    return postCollection.findOne({ _id: new ObjectId(id) });
+  },
+
   async create(post: Post): Promise<string> {
     const insertResult = await postCollection.insertOne(post);
 

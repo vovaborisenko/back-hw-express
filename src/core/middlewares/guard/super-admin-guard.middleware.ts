@@ -1,9 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { header, validationResult } from 'express-validator';
 import { HttpStatus } from '../../types/http-status';
-
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'qwerty';
+import { SETTINGS } from '../../settings/settings';
 
 const headerAuthValidationChain = header('authorization')
   .matches(/^Basic\s[a-zA-Z0-9]+$/)
@@ -13,7 +11,10 @@ const headerAuthValidationChain = header('authorization')
     const credentials = Buffer.from(token, 'base64').toString('utf-8');
     const [username, password] = credentials.split(':');
 
-    return username === ADMIN_USERNAME && password === ADMIN_PASSWORD;
+    return (
+      username === SETTINGS.ADMIN_USERNAME &&
+      password === SETTINGS.ADMIN_PASSWORD
+    );
   });
 
 function validationRequest(req: Request, res: Response, next: NextFunction) {

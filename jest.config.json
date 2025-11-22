@@ -2,5 +2,8 @@
   "preset": "ts-jest",
   "testEnvironment": "node",
   "moduleFileExtensions": ["ts", "js", "json", "node"],
+  "testMatch": [
+    "**/?(*.)+(spec|test).{j,t}s?(x)"
+  ],
   "collectCoverageFrom": ["src/**/*.{ts,tsx}", "!src/**/*.d.ts"]
 }
