@@ -1,32 +1,46 @@
 import { UserCreateDto } from '../dto/user.create-dto';
 import { usersRepository } from '../repositories/users.repository';
-import { ValidationError } from '../../core/types/validation';
 import { bcryptService } from '../../auth/application/bcrypt.service';
+import { UserEntity } from './user.entity';
+import { Result, ResultStatus } from '../../core/types/result-object';
 
 export const usersService = {
-  async create(dto: UserCreateDto): Promise<string | ValidationError> {
+  async create(
+    dto: UserCreateDto,
+  ): Promise<
+    | Result<{ id: string; user: UserEntity }>
+    | Result<null, ResultStatus.BadRequest>
+  > {
     const userByLogin = await usersRepository.findByLogin(dto.login);
 
     if (userByLogin) {
-      return { field: 'login', message: 'login should be unique' };
+      return {
+        status: ResultStatus.BadRequest,
+        extensions: [{ field: 'login', message: 'login should be unique' }],
+        data: null,
+      };
     }
 
     const userByEmail = await usersRepository.findByEmail(dto.email);
 
     if (userByEmail) {
-      return { field: 'email', message: 'email should be unique' };
+      return {
+        status: ResultStatus.BadRequest,
+        extensions: [{ field: 'email', message: 'email should be unique' }],
+        data: null,
+      };
     }
 
     const passwordHash = await bcryptService.createHash(dto.password);
 
-    const newUser = {
-      login: dto.login,
-      email: dto.email,
-      passwordHash: passwordHash,
-      createdAt: new Date(),
-    };
+    const newUser = new UserEntity(dto.login, dto.email, passwordHash);
+    const createdId = await usersRepository.create(newUser);
 
-    return usersRepository.create(newUser);
+    return {
+      status: ResultStatus.Success,
+      extensions: [],
+      data: { id: createdId, user: newUser },
+    };
   },
 
   delete(id: string): Promise<void> {

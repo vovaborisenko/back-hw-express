@@ -87,4 +87,22 @@ describe('Auth API', () => {
       });
     });
   });
+
+  describe(`POST ${PATH.AUTH}/registration-confirmation`, () => {
+    it('should return 400 if code not exist', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/registration-confirmation`)
+        .send({
+          code: 'loginOrEmail',
+        })
+        .expect(HttpStatus.BadRequest);
+    });
+
+    it('should return 200 and accessToken when credentials is right', async () => {
+      const { user, token } = await createUserAndLogin(app);
+
+      // @ts-ignore
+      expect(jws.decode(token)?.userId).toBe(user.id);
+    });
+  });
 });

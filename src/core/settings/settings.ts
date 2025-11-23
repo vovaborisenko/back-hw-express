@@ -1,12 +1,18 @@
+import { env } from 'node:process';
+
 export const SETTINGS = {
-  PORT: process.env.PORT || 5000,
+  PORT: env.PORT || 5000,
 
-  MONGO_URL: process.env.MONGO_URL || 'mongodb://localhost:27017/incubator-hw',
-  DB_NAME: process.env.DB_NAME || 'incubator-hw',
+  MONGO_URL: env.MONGO_URL || '',
+  DB_NAME: env.DB_NAME || '',
 
-  AC_SECRET: process.env.AC_SECRET || 'some-secretest-key',
-  AC_TIME: process.env.AC_TIME || '1h',
+  AC_SECRET: env.AC_SECRET || '',
+  AC_TIME: env.AC_TIME || '',
 
-  ADMIN_USERNAME: process.env.ADMIN_USERNAME || 'admin',
-  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD || 'qwerty',
+  ADMIN_USERNAME: env.ADMIN_USERNAME || '',
+  ADMIN_PASSWORD: env.ADMIN_PASSWORD || '',
+
+  EMAIL: env.EMAIL || '',
+  EMAIL_NAME: env.EMAIL_NAME || '',
+  EMAIL_PASSWORD: env.EMAIL_PASSWORD || '',
 };

@@ -22,10 +22,25 @@ export const usersRepository = {
     return userCollection.findOne({ email });
   },
 
+  findByEmailConfirmationCode(code: string): Promise<WithId<User> | null> {
+    return userCollection.findOne({
+      'emailConfirmation.confirmationCode': code,
+    });
+  },
+
   async create(user: User): Promise<string> {
     const insertResult = await userCollection.insertOne(user);
 
     return insertResult.insertedId.toString();
+  },
+
+  async update(id: string, user: Partial<User>): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: user },
+    );
+
+    return updateResult.matchedCount === 1;
   },
 
   async delete(id: string): Promise<void> {
