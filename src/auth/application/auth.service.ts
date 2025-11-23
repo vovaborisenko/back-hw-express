@@ -111,7 +111,7 @@ export const authService = {
   > {
     const user = await usersRepository.findByEmail(dto.email);
 
-    if (user?.emailConfirmation.isConfirmed) {
+    if (!user || user?.emailConfirmation.isConfirmed) {
       return {
         status: ResultStatus.BadRequest,
         extensions: [{ field: 'email', message: 'email is already confirmed' }],

@@ -6,6 +6,6 @@ export const userCreateDtoValidationMiddleware = [
   ),
   getBodyStringValidationMiddleware('password', { min: 6, max: 20 }),
   getBodyStringValidationMiddleware('email', { min: 6 }).matches(
-    /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
+    /^[\w-+.]+@([\w-]+\.)+[\w-]{2,4}$/,
   ),
 ];
