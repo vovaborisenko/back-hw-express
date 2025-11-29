@@ -43,7 +43,7 @@ describe('Users API body validation', () => {
       ${'email'}    | ${''}             | ${'Length of email should be between 6 and Infinity'}
       ${'email'}    | ${'   '}          | ${'Length of email should be between 6 and Infinity'}
       ${'email'}    | ${'w@w.s'}        | ${'Length of email should be between 6 and Infinity'}
-      ${'email'}    | ${'w+@w.s_u'}     | ${'Invalid value'}
+      ${'email'}    | ${'w$@w.s_u'}     | ${'Invalid value'}
       ${'email'}    | ${'ar-23_ZvfrtV'} | ${'Invalid value'}
       ${'password'} | ${null}           | ${'password should be string'}
       ${'password'} | ${5}              | ${'password should be string'}
