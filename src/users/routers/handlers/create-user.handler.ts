@@ -8,22 +8,23 @@ import { usersQueryRepository } from '../../repositories/users.query-repository'
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
 import { ErrorMessages } from '../../../core/types/validation';
+import { ResultStatus } from '../../../core/types/result-object';
 
 export async function createUserHandler(
   req: Request<{}, {}, UserCreateDto>,
   res: Response<UserViewModel | ErrorMessages>,
 ): Promise<void> {
-  const createdUserIdOrError = await usersService.create(req.body);
+  const result = await usersService.create(req.body);
 
-  if (typeof createdUserIdOrError !== 'string') {
+  if (result.status !== ResultStatus.Success) {
     res
       .status(HttpStatus.BadRequest)
-      .json(createErrorMessages([createdUserIdOrError]));
+      .json(createErrorMessages(result.extensions));
 
     return;
   }
 
-  const createdUser = await usersQueryRepository.findById(createdUserIdOrError);
+  const createdUser = await usersQueryRepository.findById(result.data.id);
 
   if (!createdUser) {
     throw new NotExistError('User');

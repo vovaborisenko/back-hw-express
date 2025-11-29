@@ -4,6 +4,7 @@ export enum ResultStatus {
   Forbidden,
   Unauthorised,
   BadRequest,
+  ServerError,
 }
 
 interface Extension {

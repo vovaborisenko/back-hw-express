@@ -7,6 +7,7 @@ const mapResultStatusToHttpStatus = {
   [ResultStatus.NotFound]: HttpStatus.NotFound,
   [ResultStatus.Unauthorised]: HttpStatus.Unauthorized,
   [ResultStatus.Success]: HttpStatus.Ok,
+  [ResultStatus.ServerError]: HttpStatus.InternalServerError,
 } satisfies Partial<Record<ResultStatus, HttpStatus>>;
 
 export function resultStatusToHttpStatus<T extends ResultStatus>(

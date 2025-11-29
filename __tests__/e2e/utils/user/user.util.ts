@@ -42,7 +42,7 @@ export async function createUsers(
   const requests = Array.from({ length: count }).map((_, index) =>
     createUser(app, {
       login: `${dto.login}${index}`,
-      email: `${dto.email}${index}`,
+      email: `${index}${dto.email}`,
       password: `${dto.password}${index}`,
     }),
   );

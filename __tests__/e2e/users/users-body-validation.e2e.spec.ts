@@ -5,7 +5,6 @@ import { runDB, stopDb } from '../../../src/db/mongo.db';
 import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
-import { UserCreateDto } from '../../../src/users/dto/user.create-dto';
 import { validAuth } from '../constants/common';
 import { userDto } from '../utils/user/user.util';
 
@@ -44,7 +43,7 @@ describe('Users API body validation', () => {
       ${'email'}    | ${''}             | ${'Length of email should be between 6 and Infinity'}
       ${'email'}    | ${'   '}          | ${'Length of email should be between 6 and Infinity'}
       ${'email'}    | ${'w@w.s'}        | ${'Length of email should be between 6 and Infinity'}
-      ${'email'}    | ${'w+@w.s_u'}     | ${'Invalid value'}
+      ${'email'}    | ${'w$@w.s_u'}     | ${'Invalid value'}
       ${'email'}    | ${'ar-23_ZvfrtV'} | ${'Invalid value'}
       ${'password'} | ${null}           | ${'password should be string'}
       ${'password'} | ${5}              | ${'password should be string'}
