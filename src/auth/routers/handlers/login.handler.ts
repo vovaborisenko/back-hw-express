@@ -6,6 +6,7 @@ import { ResultStatus } from '../../../core/types/result-object';
 import { resultStatusToHttpStatus } from '../../../core/utils/result-status-to-http-status';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
 import { ErrorMessages } from '../../../core/types/validation';
+import { Cookies } from '../../../core/cookies/cookies';
 
 export async function loginHandler(
   req: Request<{}, {}, LoginDto>,
@@ -24,5 +25,9 @@ export async function loginHandler(
     return;
   }
 
-  res.status(HttpStatus.Ok).send(result.data);
+  res.cookie(Cookies.RefreshToken, result.data.refreshToken, {
+    httpOnly: true,
+    secure: true,
+  });
+  res.status(HttpStatus.Ok).send({ accessToken: result.data.accessToken });
 }

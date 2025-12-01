@@ -4,16 +4,19 @@ import { Comment } from '../comments/types/comment';
 import { Post } from '../posts/types/post';
 import { User } from '../users/types/user';
 import { SETTINGS } from '../core/settings/settings';
+import { RefreshToken } from '../auth/types/refresh-token';
 
 export const BLOG_COLLECTION_NAME = 'blogs';
 const COMMENTS_COLLECTION_NAME = 'comments';
 const POST_COLLECTION_NAME = 'posts';
+const REFRESH_TOKEN_COLLECTION_NAME = 'refreshToken';
 export const USER_COLLECTION_NAME = 'users';
 
 export let client: MongoClient;
 export let blogCollection: Collection<Blog>;
 export let commentCollection: Collection<Comment>;
 export let postCollection: Collection<Post>;
+export let refreshTokenCollection: Collection<RefreshToken>;
 export let userCollection: Collection<User>;
 
 export async function runDB(url: string): Promise<void> {
@@ -24,6 +27,9 @@ export async function runDB(url: string): Promise<void> {
   blogCollection = db.collection<Blog>(BLOG_COLLECTION_NAME);
   commentCollection = db.collection<Comment>(COMMENTS_COLLECTION_NAME);
   postCollection = db.collection<Post>(POST_COLLECTION_NAME);
+  refreshTokenCollection = db.collection<RefreshToken>(
+    REFRESH_TOKEN_COLLECTION_NAME,
+  );
   userCollection = db.collection<User>(USER_COLLECTION_NAME);
 
   try {

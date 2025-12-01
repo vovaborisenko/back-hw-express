@@ -8,6 +8,8 @@ import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
 import { validAuth } from '../constants/common';
 import { createUserAndLogin } from '../utils/user/user.util';
+import { extractCookies } from '../utils/cookies/cookies';
+import { wait } from '../utils/core/wait';
 
 describe('Auth API', () => {
   const app = express();
@@ -38,11 +40,13 @@ describe('Auth API', () => {
         .expect(HttpStatus.Unauthorized);
     });
 
-    it('should return 200 and accessToken when credentials is right', async () => {
-      const { user, token } = await createUserAndLogin(app);
+    it('should return 200, refreshToken and accessToken when credentials is right', async () => {
+      const { user, token, refreshToken } = await createUserAndLogin(app);
 
       // @ts-ignore
       expect(jws.decode(token)?.userId).toBe(user.id);
+      // @ts-ignore
+      expect(jws.decode(refreshToken)?.userId).toBe(user.id);
     });
   });
 
@@ -85,6 +89,93 @@ describe('Auth API', () => {
         login: user.login,
         email: user.email,
       });
+    });
+  });
+
+  describe(`POST ${PATH.AUTH}/refresh-token`, () => {
+    it('should return 401 if refreshToken is not exist', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/refresh-token`)
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 401 if refreshToken is wrong', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/refresh-token`)
+        .set('Cookie', 'refreshToken=refreshToken')
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 200 and new tokens if refreshToken is correct', async () => {
+      const { user, refreshToken, token } = await createUserAndLogin(app);
+
+      await wait(1000);
+
+      const response = await request(app)
+        .post(`${PATH.AUTH}/refresh-token`)
+        .set('Cookie', `refreshToken=${refreshToken}`)
+        .expect(HttpStatus.Ok);
+
+      const cookies = extractCookies(response);
+
+      expect(response.body.accessToken).not.toBe(token);
+      expect(cookies.refreshToken).not.toBe(refreshToken);
+      // @ts-ignore
+      expect(jws.decode(response.body.accessToken)?.userId).toBe(user.id);
+      // @ts-ignore
+      expect(jws.decode(cookies.refreshToken)?.userId).toBe(user.id);
+    });
+
+    it('should return 401 on second request with the same token', async () => {
+      const { refreshToken } = await createUserAndLogin(app);
+
+      await wait(1000);
+
+      await request(app)
+        .post(`${PATH.AUTH}/refresh-token`)
+        .set('Cookie', `refreshToken=${refreshToken}`)
+        .expect(HttpStatus.Ok);
+      await request(app)
+        .post(`${PATH.AUTH}/refresh-token`)
+        .set('Cookie', `refreshToken=${refreshToken}`)
+        .expect(HttpStatus.Unauthorized);
+    });
+  });
+
+  describe(`POST ${PATH.AUTH}/logout`, () => {
+    it('should return 401 if refreshToken is not exist', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/logout`)
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 401 if refreshToken is wrong', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/logout`)
+        .set('Cookie', 'refreshToken=refreshToken')
+        .expect(HttpStatus.Unauthorized);
+    });
+
+    it('should return 204 refreshToken is correct', async () => {
+      const { refreshToken } = await createUserAndLogin(app);
+
+      await request(app)
+        .post(`${PATH.AUTH}/logout`)
+        .set('Cookie', `refreshToken=${refreshToken}`)
+        .expect(HttpStatus.NoContent);
+    });
+
+    it('should return 401 on second request', async () => {
+      const { refreshToken } = await createUserAndLogin(app);
+
+      await request(app)
+        .post(`${PATH.AUTH}/logout`)
+        .set('Cookie', `refreshToken=${refreshToken}`)
+        .expect(HttpStatus.NoContent);
+      await request(app)
+        .post(`${PATH.AUTH}/logout`)
+        .set('Cookie', `refreshToken=${refreshToken}`)
+        .expect(HttpStatus.Unauthorized);
     });
   });
 
