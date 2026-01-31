@@ -7,7 +7,9 @@ export const SETTINGS = {
   DB_NAME: env.DB_NAME || '',
 
   AC_SECRET: env.AC_SECRET || '',
-  AC_TIME: env.AC_TIME || '',
+  AC_TIME: env.AC_TIME || 1e4,
+  REFRESH_SECRET: env.REFRESH_SECRET || '',
+  REFRESH_TIME: env.REFRESH_TIME || 1e6,
 
   ADMIN_USERNAME: env.ADMIN_USERNAME || '',
   ADMIN_PASSWORD: env.ADMIN_PASSWORD || '',

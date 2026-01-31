@@ -1,10 +1,9 @@
 import { ReqUser } from '../../auth/types/auth';
 
-declare global {
-  namespace Express {
-    export interface Request {
-      user?: ReqUser;
-    }
+declare module 'express' {
+  // Inject additional properties on express.Request
+  interface Request {
+    user?: ReqUser;
   }
 }
 

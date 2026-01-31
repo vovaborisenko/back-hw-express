@@ -5,6 +5,7 @@ import { HttpStatus } from '../../../../src/core/types/http-status';
 import type { App } from 'supertest/types';
 import { UserCreateDto } from '../../../../src/users/dto/user.create-dto';
 import { UserViewModel } from '../../../../src/users/types/user.view-model';
+import { extractCookies } from '../cookies/cookies';
 
 export const userDto: { create: UserCreateDto[] } = {
   create: [
@@ -53,11 +54,9 @@ export async function createUsers(
 export async function createUserAndLogin(
   app: App,
   dto: UserCreateDto = userDto.create[0],
-): Promise<{ user: UserViewModel; token: string }> {
+): Promise<{ user: UserViewModel; token: string; refreshToken: string }> {
   const user = await createUser(app, dto);
-  const {
-    body: { accessToken },
-  } = await request(app)
+  const response = await request(app)
     .post(`${PATH.AUTH}/login`)
     .send({
       loginOrEmail: dto.login,
@@ -65,8 +64,11 @@ export async function createUserAndLogin(
     })
     .expect(HttpStatus.Ok);
 
+  const { refreshToken } = extractCookies(response);
+
   return {
     user,
-    token: accessToken,
+    token: response.body.accessToken,
+    refreshToken,
   };
 }

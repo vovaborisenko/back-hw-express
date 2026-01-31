@@ -6,10 +6,13 @@ import { userCreateDtoValidationMiddleware } from '../../users/validation/user-c
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
 import { loginHandler } from './handlers/login.handler';
+import { logoutHandler } from './handlers/logout.handler';
 import { meHandler } from './handlers/me.handler';
+import { refreshTokenHandler } from './handlers/refresh-token.handler';
 import { registrationHandler } from './handlers/registration.handler';
 import { registrationConfirmationHandler } from './handlers/registration-confirmation.handler';
 import { registrationEmailResendingHandler } from './handlers/registration-email-resending.handler';
+import { refreshTokenGuard } from '../../core/middlewares/guard/refresh-token.guard';
 
 export const authRouter = Router({});
 
@@ -20,7 +23,9 @@ authRouter
     reqValidationResultMiddleware,
     loginHandler,
   )
+  .post('/logout', refreshTokenGuard, logoutHandler)
   .get('/me', accessTokenGuard, meHandler)
+  .post('/refresh-token', refreshTokenGuard, refreshTokenHandler)
   .post(
     '/registration',
     userCreateDtoValidationMiddleware,
