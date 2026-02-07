@@ -1,9 +1,10 @@
-import { ReqUser } from '../../auth/types/auth';
+import { ReqDevice, ReqUser } from '../../auth/types/auth';
 
 declare module 'express' {
   // Inject additional properties on express.Request
   interface Request {
     user?: ReqUser;
+    device?: ReqDevice;
   }
 }
 
