@@ -1,24 +1,23 @@
 import { Request, Response } from 'express';
+import {
+  Cookies,
+  RefreshTokenCookiesOptions,
+} from '../../../core/cookies/cookies';
 import { HttpStatus } from '../../../core/types/http-status';
-import { jwtService } from '../../application/jwt.service';
 import { ResultStatus } from '../../../core/types/result-object';
+import { securityDevicesService } from '../../../security-devices/application/security-devices.service';
 
 export async function logoutHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const userId = req.user?.id;
+  const userId = req.user!.id;
+  const deviceId = req.device!.id;
 
-  if (!userId) {
-    res.sendStatus(HttpStatus.Unauthorized);
-
-    return;
-  }
-
-  const result = await jwtService.saveRefreshToken(
+  const result = await securityDevicesService.deleteOnLogout({
     userId,
-    req.cookies.refreshToken,
-  );
+    deviceId,
+  });
 
   if (result.status !== ResultStatus.Success) {
     res.sendStatus(HttpStatus.BadRequest);
@@ -26,5 +25,6 @@ export async function logoutHandler(
     return;
   }
 
+  res.clearCookie(Cookies.RefreshToken, RefreshTokenCookiesOptions);
   res.sendStatus(HttpStatus.NoContent);
 }

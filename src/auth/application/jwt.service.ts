@@ -1,8 +1,8 @@
 import jsonwebtoken from 'jsonwebtoken';
 import { SETTINGS } from '../../core/settings/settings';
-import { TokenPayload } from '../types/auth';
+import { RefreshTokenPayload, TokenPayload } from '../types/auth';
 import { Result, ResultStatus } from '../../core/types/result-object';
-import { tokenRepository } from '../repositories/token-repository';
+import { RefreshTokenDto } from '../dto/refresh-token.dto';
 
 export const jwtService = {
   createToken(userId: string): string {
@@ -17,16 +17,20 @@ export const jwtService = {
       return null;
     }
   },
-  createRefreshToken(userId: string): string {
-    return jsonwebtoken.sign({ userId }, SETTINGS.REFRESH_SECRET, {
+  createRefreshToken(dto: RefreshTokenDto): string {
+    return jsonwebtoken.sign(dto, SETTINGS.REFRESH_SECRET, {
       expiresIn: Number(SETTINGS.REFRESH_TIME),
     });
   },
   async generateTokens(
     userId: string,
+    deviceId: string = crypto.randomUUID(),
   ): Promise<Result<{ accessToken: string; refreshToken: string }>> {
     const accessToken = this.createToken(userId);
-    const refreshToken = this.createRefreshToken(userId);
+    const refreshToken = this.createRefreshToken({
+      userId,
+      deviceId,
+    });
 
     return {
       status: ResultStatus.Success,
@@ -37,52 +41,17 @@ export const jwtService = {
       },
     };
   },
-  async regenerateToken(
-    userId: string,
-    token: string,
-  ): Promise<Result<{ accessToken: string; refreshToken: string }>> {
-    await this.saveRefreshToken(userId, token);
-
-    return this.generateTokens(userId);
-  },
-  async saveRefreshToken(
-    userId: string,
-    refreshToken: string,
-  ): Promise<Result<null, ResultStatus.Success | ResultStatus.BadRequest>> {
-    const payload = jsonwebtoken.decode(refreshToken, { json: true });
-    const insertedId = await tokenRepository.insertToken(
-      refreshToken,
-      userId,
-      new Date((payload?.exp || 0) * 1e3),
-    );
-
-    if (insertedId) {
-      return {
-        status: ResultStatus.Success,
-        extensions: [],
-        data: null,
-      };
-    }
-
-    return {
-      status: ResultStatus.BadRequest,
-      extensions: [],
-      data: null,
-    };
-  },
-  async isTokenUsed(token: string): Promise<boolean> {
-    const refreshToken = await tokenRepository.findToken(token);
-
-    return Boolean(refreshToken);
-  },
-  verifyRefreshToken(token: string): TokenPayload | null {
+  verifyRefreshToken(token: string): RefreshTokenPayload | null {
     try {
       return jsonwebtoken.verify(
         token,
         SETTINGS.REFRESH_SECRET,
-      ) as TokenPayload;
+      ) as RefreshTokenPayload;
     } catch {
       return null;
     }
+  },
+  decodeRefreshToken(token: string): RefreshTokenPayload {
+    return jsonwebtoken.decode(token) as RefreshTokenPayload;
   },
 };

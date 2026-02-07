@@ -196,4 +196,44 @@ describe('Auth API', () => {
       expect(jws.decode(token)?.userId).toBe(user.id);
     });
   });
+
+  describe(`Too many attempts`, () => {
+    beforeAll(() => {
+      jest.useFakeTimers({ advanceTimers: true });
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+
+    it.each`
+      path                              | maxAttempts
+      ${'login'}                        | ${5}
+      ${'registration'}                 | ${5}
+      ${'registration-confirmation'}    | ${5}
+      ${'registration-email-resending'} | ${5}
+    `(
+      `should return 429 POST ${PATH.AUTH}/$path more than $maxAttempts attempts`,
+      async ({ path, maxAttempts }) => {
+        await runTest();
+
+        // after 10sec has more attempts
+        jest.setSystemTime(Date.now() + 1e4);
+        await runTest();
+
+        async function runTest() {
+          for (let i = 1; i <= maxAttempts + 1; i++) {
+            await request(app)
+              .post(`${PATH.AUTH}/${path}`)
+              .send()
+              .expect(
+                i > maxAttempts
+                  ? HttpStatus.TooManyRequests
+                  : HttpStatus.BadRequest,
+              );
+          }
+        }
+      },
+    );
+  });
 });

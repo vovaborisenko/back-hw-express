@@ -21,6 +21,27 @@ export const userDto: { create: UserCreateDto[] } = {
     },
   ],
 };
+export const USER_AGENTS = [
+  // Chrome
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+
+  // Firefox
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:121.0) Gecko/20100101 Firefox/121.0',
+
+  // Safari
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+
+  // Edge
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+
+  // Android
+  'Mozilla/5.0 (Linux; Android 14; SM-S908B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.210 Mobile Safari/537.36',
+  'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.6045.163 Mobile Safari/537.36',
+];
 
 export async function createUser(
   app: App,
@@ -51,13 +72,14 @@ export async function createUsers(
   return Promise.all(requests);
 }
 
-export async function createUserAndLogin(
+export async function loginUser(
   app: App,
   dto: UserCreateDto = userDto.create[0],
-): Promise<{ user: UserViewModel; token: string; refreshToken: string }> {
-  const user = await createUser(app, dto);
+  userAgent: string = USER_AGENTS[0],
+): Promise<{ token: string; refreshToken: string }> {
   const response = await request(app)
     .post(`${PATH.AUTH}/login`)
+    .set('User-Agent', userAgent)
     .send({
       loginOrEmail: dto.login,
       password: dto.password,
@@ -67,8 +89,33 @@ export async function createUserAndLogin(
   const { refreshToken } = extractCookies(response);
 
   return {
-    user,
     token: response.body.accessToken,
     refreshToken,
+  };
+}
+
+export async function loginUserWithDifferentUserAgent(
+  count: number,
+  app: App,
+  dto: UserCreateDto = userDto.create[0],
+): Promise<{ token: string; refreshToken: string }[]> {
+  const requests = Array.from({ length: count }).map((_, index) =>
+    loginUser(app, dto, USER_AGENTS[index]),
+  );
+
+  return Promise.all(requests);
+}
+
+export async function createUserAndLogin(
+  app: App,
+  dto: UserCreateDto = userDto.create[0],
+  userAgent: string = USER_AGENTS[0],
+): Promise<{ user: UserViewModel; token: string; refreshToken: string }> {
+  const user = await createUser(app, dto);
+  const tokens = await loginUser(app, dto, userAgent);
+
+  return {
+    user,
+    ...tokens,
   };
 }

@@ -13,12 +13,14 @@ import { registrationHandler } from './handlers/registration.handler';
 import { registrationConfirmationHandler } from './handlers/registration-confirmation.handler';
 import { registrationEmailResendingHandler } from './handlers/registration-email-resending.handler';
 import { refreshTokenGuard } from '../../core/middlewares/guard/refresh-token.guard';
+import { getRateLimitMiddleware } from '../../core/middlewares/rate-limit.middleware';
 
 export const authRouter = Router({});
 
 authRouter
   .post(
     '/login',
+    getRateLimitMiddleware(),
     loginDtoValidationMiddleware,
     reqValidationResultMiddleware,
     loginHandler,
@@ -28,18 +30,21 @@ authRouter
   .post('/refresh-token', refreshTokenGuard, refreshTokenHandler)
   .post(
     '/registration',
+    getRateLimitMiddleware(),
     userCreateDtoValidationMiddleware,
     reqValidationResultMiddleware,
     registrationHandler,
   )
   .post(
     '/registration-confirmation',
+    getRateLimitMiddleware(),
     registrationConfirmationValidationMiddleware,
     reqValidationResultMiddleware,
     registrationConfirmationHandler,
   )
   .post(
     '/registration-email-resending',
+    getRateLimitMiddleware(),
     registrationEmailResendingValidationMiddleware,
     reqValidationResultMiddleware,
     registrationEmailResendingHandler,
