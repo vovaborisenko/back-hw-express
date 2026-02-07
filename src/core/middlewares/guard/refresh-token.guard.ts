@@ -1,6 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../types/http-status';
 import { jwtService } from '../../../auth/application/jwt.service';
+import { securityDevicesService } from '../../../security-devices/application/security-devices.service';
+import { ResultStatus } from '../../types/result-object';
+import { parseJwtTime } from '../../utils/parseJwtTime';
 
 export async function refreshTokenGuard(
   req: Request,
@@ -19,14 +22,18 @@ export async function refreshTokenGuard(
     return res.sendStatus(HttpStatus.Unauthorized);
   }
 
-  const isTokenUsed = await jwtService.isTokenUsed(refreshToken);
+  const resultSessionCheck = await securityDevicesService.check(payload);
 
-  if (isTokenUsed) {
+  if (resultSessionCheck.status !== ResultStatus.Success) {
     return res.sendStatus(HttpStatus.Unauthorized);
   }
 
   req.user = {
     id: payload.userId,
+  };
+  req.device = {
+    id: payload.deviceId,
+    issuedAt: parseJwtTime(payload.iat),
   };
 
   next();

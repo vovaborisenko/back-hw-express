@@ -1,4 +1,5 @@
 import { Result, ResultStatus } from '../../core/types/result-object';
+import { AgentDetails } from 'express-useragent';
 import { WithId } from 'mongodb';
 import { User } from '../../users/types/user';
 import { usersService } from '../../users/application/users.service';
@@ -7,7 +8,9 @@ import { bcryptService } from './bcrypt.service';
 import { jwtService } from './jwt.service';
 import { emailService } from './email.service';
 import { emailManager } from './email.manager';
+import { securityDevicesService } from '../../security-devices/application/security-devices.service';
 import { RegistrationDto } from '../dto/registration.dto';
+import { RefreshTokenUpdateDto } from '../dto/refresh-token.update-dto';
 import { RegistrationEmailResendingDto } from '../dto/registration-email-resending.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
 import { UserEntity } from '../../users/application/user.entity';
@@ -16,6 +19,10 @@ export const authService = {
   async login(
     loginOrEmail: string,
     password: string,
+    reqData: {
+      ip?: string;
+      useragent?: AgentDetails;
+    },
   ): Promise<
     | Result<{ accessToken: string; refreshToken: string }>
     | Result<null, ResultStatus.Unauthorised>
@@ -33,6 +40,14 @@ export const authService = {
     const { data } = await jwtService.generateTokens(
       result.data._id.toString(),
     );
+    const refreshTokenPayload = jwtService.decodeRefreshToken(
+      data.refreshToken,
+    );
+    await securityDevicesService.create({
+      ip: reqData.ip,
+      refreshToken: refreshTokenPayload,
+      useragent: reqData.useragent,
+    });
 
     return {
       status: ResultStatus.Success,
@@ -195,6 +210,31 @@ export const authService = {
       status: ResultStatus.Success,
       extensions: [],
       data: null,
+    };
+  },
+  async regenerateTokens({
+    deviceId,
+    userId,
+    issuedAt,
+  }: RefreshTokenUpdateDto): Promise<
+    Result<{ accessToken: string; refreshToken: string }>
+  > {
+    const { data } = await jwtService.generateTokens(userId, deviceId);
+    const refreshTokenPayload = jwtService.decodeRefreshToken(
+      data.refreshToken,
+    );
+
+    await securityDevicesService.update(
+      { deviceId, issuedAt },
+      {
+        refreshToken: refreshTokenPayload,
+      },
+    );
+
+    return {
+      status: ResultStatus.Success,
+      extensions: [],
+      data,
     };
   },
 };

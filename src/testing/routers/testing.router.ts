@@ -5,7 +5,7 @@ import {
   commentCollection,
   logCollection,
   postCollection,
-  refreshTokenCollection,
+  securityDeviceCollection,
   userCollection,
 } from '../../db/mongo.db';
 
@@ -16,9 +16,9 @@ testingRouter.delete('/all-data', async (req: Request, res: Response) => {
     [
       blogCollection,
       commentCollection,
+      securityDeviceCollection,
       logCollection,
       postCollection,
-      refreshTokenCollection,
       userCollection,
     ].map((collection) => collection.deleteMany()),
   );
