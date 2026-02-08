@@ -15,6 +15,10 @@ export async function loginHandler(
   const result = await authService.login(
     req.body.loginOrEmail,
     req.body.password,
+    {
+      ip: req.ip,
+      useragent: req.useragent,
+    },
   );
 
   if (result.status !== ResultStatus.Success) {
