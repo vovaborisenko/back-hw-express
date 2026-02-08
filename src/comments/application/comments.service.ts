@@ -2,7 +2,7 @@ import { CommentCreateDto } from '../dto/comment.create-dto';
 import { CommentUpdateDto } from '../dto/comment.update-dto';
 import { commentsRepository } from '../repositories/comments.repository';
 import { postsRepository } from '../../posts/repositories/posts.repository';
-import { usersRepository } from '../../users/repositories/users.repository';
+import { usersRepository } from '../../composition.root';
 import { Result, ResultStatus } from '../../core/types/result-object';
 
 export const commentsService = {

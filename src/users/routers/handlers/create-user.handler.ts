@@ -1,34 +1,36 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { UserViewModel } from '../../types/user.view-model';
 import { mapToUserViewModel } from '../mappers/map-to-user-view-model';
 import { UserCreateDto } from '../../dto/user.create-dto';
-import { usersService } from '../../application/users.service';
-import { usersQueryRepository } from '../../repositories/users.query-repository';
+import { UsersService } from '../../application/users.service';
+import { UsersQueryRepository } from '../../repositories/users.query-repository';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
 import { ErrorMessages } from '../../../core/types/validation';
 import { ResultStatus } from '../../../core/types/result-object';
 
-export async function createUserHandler(
-  req: Request<{}, {}, UserCreateDto>,
-  res: Response<UserViewModel | ErrorMessages>,
-): Promise<void> {
-  const result = await usersService.create(req.body);
+export function createCreateUserHandler(
+  usersService: UsersService,
+  usersQueryRepository: UsersQueryRepository,
+): RequestHandler<{}, UserViewModel | ErrorMessages, UserCreateDto> {
+  return async function (req, res) {
+    const result = await usersService.create(req.body);
 
-  if (result.status !== ResultStatus.Success) {
-    res
-      .status(HttpStatus.BadRequest)
-      .json(createErrorMessages(result.extensions));
+    if (result.status !== ResultStatus.Success) {
+      res
+        .status(HttpStatus.BadRequest)
+        .json(createErrorMessages(result.extensions));
 
-    return;
-  }
+      return;
+    }
 
-  const createdUser = await usersQueryRepository.findById(result.data.id);
+    const createdUser = await usersQueryRepository.findById(result.data.id);
 
-  if (!createdUser) {
-    throw new NotExistError('User');
-  }
+    if (!createdUser) {
+      throw new NotExistError('User');
+    }
 
-  res.status(HttpStatus.Created).json(mapToUserViewModel(createdUser));
+    res.status(HttpStatus.Created).json(mapToUserViewModel(createdUser));
+  };
 }

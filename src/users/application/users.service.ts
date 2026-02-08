@@ -1,17 +1,19 @@
 import { UserCreateDto } from '../dto/user.create-dto';
-import { usersRepository } from '../repositories/users.repository';
+import { UsersRepository } from '../repositories/users.repository';
 import { bcryptService } from '../../auth/application/bcrypt.service';
 import { UserEntity } from './user.entity';
 import { Result, ResultStatus } from '../../core/types/result-object';
 
-export const usersService = {
+export class UsersService {
+  constructor(private readonly usersRepository: UsersRepository) {}
+
   async create(
     dto: UserCreateDto,
   ): Promise<
     | Result<{ id: string; user: UserEntity }>
     | Result<null, ResultStatus.BadRequest>
   > {
-    const userByLogin = await usersRepository.findByLogin(dto.login);
+    const userByLogin = await this.usersRepository.findByLogin(dto.login);
 
     if (userByLogin) {
       return {
@@ -21,7 +23,7 @@ export const usersService = {
       };
     }
 
-    const userByEmail = await usersRepository.findByEmail(dto.email);
+    const userByEmail = await this.usersRepository.findByEmail(dto.email);
 
     if (userByEmail) {
       return {
@@ -34,16 +36,16 @@ export const usersService = {
     const passwordHash = await bcryptService.createHash(dto.password);
 
     const newUser = new UserEntity(dto.login, dto.email, passwordHash);
-    const createdId = await usersRepository.create(newUser);
+    const createdId = await this.usersRepository.create(newUser);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
       data: { id: createdId, user: newUser },
     };
-  },
+  }
 
   delete(id: string): Promise<void> {
-    return usersRepository.delete(id);
-  },
-};
+    return this.usersRepository.delete(id);
+  }
+}
