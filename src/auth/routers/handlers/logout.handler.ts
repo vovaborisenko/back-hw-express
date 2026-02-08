@@ -5,7 +5,7 @@ import {
 } from '../../../core/cookies/cookies';
 import { HttpStatus } from '../../../core/types/http-status';
 import { ResultStatus } from '../../../core/types/result-object';
-import { securityDevicesService } from '../../../security-devices/application/security-devices.service';
+import { securityDevicesService } from '../../../composition.root';
 
 export async function logoutHandler(
   req: Request,

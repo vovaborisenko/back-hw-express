@@ -2,12 +2,15 @@ import { Result, ResultStatus } from '../../core/types/result-object';
 import { AgentDetails } from 'express-useragent';
 import { WithId } from 'mongodb';
 import { User } from '../../users/types/user';
-import { usersRepository, usersService } from '../../composition.root';
+import {
+  securityDevicesService,
+  usersRepository,
+  usersService,
+} from '../../composition.root';
 import { bcryptService } from './bcrypt.service';
 import { jwtService } from './jwt.service';
 import { emailService } from './email.service';
 import { emailManager } from './email.manager';
-import { securityDevicesService } from '../../security-devices/application/security-devices.service';
 import { RegistrationDto } from '../dto/registration.dto';
 import { RefreshTokenUpdateDto } from '../dto/refresh-token.update-dto';
 import { RegistrationEmailResendingDto } from '../dto/registration-email-resending.dto';
