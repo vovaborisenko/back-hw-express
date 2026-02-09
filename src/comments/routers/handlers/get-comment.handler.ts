@@ -1,19 +1,20 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { mapToCommentViewModel } from '../mappers/map-to-comment-view-model';
 import { CommentViewModel } from '../../types/comment.view-model';
-import { commentsQueryRepository } from '../../../composition.root';
 import { HttpStatus } from '../../../core/types/http-status';
+import { CommentsQueryRepository } from '../../repositories/comments.query-repository';
 
-export async function getCommentHandler(
-  req: Request<{ id: string }>,
-  res: Response<CommentViewModel | undefined>,
-): Promise<void> {
-  const comment = await commentsQueryRepository.findById(req.params.id);
+export function createGetCommentHandler(
+  commentsQueryRepository: CommentsQueryRepository,
+): RequestHandler<{ id: string }, CommentViewModel | undefined> {
+  return async function (req, res) {
+    const comment = await commentsQueryRepository.findById(req.params.id);
 
-  if (!comment) {
-    res.sendStatus(HttpStatus.NotFound);
-    return;
-  }
+    if (!comment) {
+      res.sendStatus(HttpStatus.NotFound);
+      return;
+    }
 
-  res.send(mapToCommentViewModel(comment));
+    res.send(mapToCommentViewModel(comment));
+  };
 }

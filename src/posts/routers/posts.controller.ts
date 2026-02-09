@@ -6,7 +6,7 @@ import { createCreatePostCommentHandler } from './handlers/create-post-comment.h
 import { CommentsQueryRepository } from '../../comments/repositories/comments.query-repository';
 import { createDeletePostHandler } from './handlers/delete-post.handler';
 import { createGetPostHandler } from './handlers/get-post.handler';
-import { createGetPostCommentListCommentHandler } from './handlers/get-post-comment-list.handler';
+import { createGetPostCommentListHandler } from './handlers/get-post-comment-list.handler';
 import { createGetPostListHandler } from './handlers/get-post-list.handler';
 import { createUpdatePostHandler } from './handlers/update-post.handler';
 import { BlogsQueryRepository } from '../../blogs/repositories/blogs.query-repository';
@@ -37,7 +37,7 @@ export class PostsController {
     );
     this.deleteItem = createDeletePostHandler(this.postsService);
     this.getItem = createGetPostHandler(this.postsQueryRepository);
-    this.getItemComments = createGetPostCommentListCommentHandler(
+    this.getItemComments = createGetPostCommentListHandler(
       this.postsQueryRepository,
       this.commentsQueryRepository,
     );

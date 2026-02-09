@@ -8,7 +8,7 @@ import { QueryCommentList } from '../../../comments/input/query-comment-list';
 import { PostsQueryRepository } from '../../repositories/posts.query-repository';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 
-export function createGetPostCommentListCommentHandler(
+export function createGetPostCommentListHandler(
   postsQueryRepository: PostsQueryRepository,
   commentsQueryRepository: CommentsQueryRepository,
 ): RequestHandler<{ id: string }, Paginated<CommentViewModel[]>> {
