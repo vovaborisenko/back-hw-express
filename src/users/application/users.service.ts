@@ -1,11 +1,14 @@
 import { UserCreateDto } from '../dto/user.create-dto';
 import { UsersRepository } from '../repositories/users.repository';
-import { bcryptService } from '../../auth/application/bcrypt.service';
+import { BcryptService } from '../../auth/application/bcrypt.service';
 import { UserEntity } from './user.entity';
 import { Result, ResultStatus } from '../../core/types/result-object';
 
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(
+    private readonly usersRepository: UsersRepository,
+    private readonly bcryptService: BcryptService,
+  ) {}
 
   async create(
     dto: UserCreateDto,
@@ -33,7 +36,7 @@ export class UsersService {
       };
     }
 
-    const passwordHash = await bcryptService.createHash(dto.password);
+    const passwordHash = await this.bcryptService.createHash(dto.password);
 
     const newUser = new UserEntity(dto.login, dto.email, passwordHash);
     const createdId = await this.usersRepository.create(newUser);

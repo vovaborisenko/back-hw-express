@@ -1,4 +1,4 @@
-export const emailManager = {
+export class EmailManager {
   emailConfirmation(code: string): string {
     return `
       <h1>Thanks for your registration</h1>
@@ -6,5 +6,5 @@ export const emailManager = {
         <a href='https://somesite.com/confirm-email?code=${code}'>complete registration</a>
       </p>
     `;
-  },
-};
+  }
+}

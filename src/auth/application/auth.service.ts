@@ -2,22 +2,30 @@ import { Result, ResultStatus } from '../../core/types/result-object';
 import { AgentDetails } from 'express-useragent';
 import { WithId } from 'mongodb';
 import { User } from '../../users/types/user';
-import {
-  securityDevicesService,
-  usersRepository,
-  usersService,
-} from '../../composition.root';
-import { bcryptService } from './bcrypt.service';
-import { jwtService } from './jwt.service';
-import { emailService } from './email.service';
-import { emailManager } from './email.manager';
+import { BcryptService } from './bcrypt.service';
+import { JwtService } from './jwt.service';
+import { EmailService } from './email.service';
+import { EmailManager } from './email.manager';
+import { UserEntity } from '../../users/application/user.entity';
+import { SecurityDevicesService } from '../../security-devices/application/security-devices.service';
+import { UsersRepository } from '../../users/repositories/users.repository';
+import { UsersService } from '../../users/application/users.service';
 import { RegistrationDto } from '../dto/registration.dto';
 import { RefreshTokenUpdateDto } from '../dto/refresh-token.update-dto';
 import { RegistrationEmailResendingDto } from '../dto/registration-email-resending.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
-import { UserEntity } from '../../users/application/user.entity';
 
-export const authService = {
+export class AuthService {
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly bcryptService: BcryptService,
+    private readonly emailService: EmailService,
+    private readonly emailManager: EmailManager,
+    private readonly securityDevicesService: SecurityDevicesService,
+    private readonly usersService: UsersService,
+    private readonly usersRepository: UsersRepository,
+  ) {}
+
   async login(
     loginOrEmail: string,
     password: string,
@@ -39,13 +47,13 @@ export const authService = {
       };
     }
 
-    const { data } = await jwtService.generateTokens(
+    const { data } = await this.jwtService.generateTokens(
       result.data._id.toString(),
     );
-    const refreshTokenPayload = jwtService.decodeRefreshToken(
+    const refreshTokenPayload = this.jwtService.decodeRefreshToken(
       data.refreshToken,
     );
-    await securityDevicesService.create({
+    await this.securityDevicesService.create({
       ip: reqData.ip,
       refreshToken: refreshTokenPayload,
       useragent: reqData.useragent,
@@ -56,7 +64,7 @@ export const authService = {
       extensions: [],
       data,
     };
-  },
+  }
 
   async checkCredentials(
     loginOrEmail: string,
@@ -65,7 +73,7 @@ export const authService = {
     | Result<WithId<User>>
     | Result<null, ResultStatus.NotFound | ResultStatus.BadRequest>
   > {
-    const user = await usersRepository.findByLoginOrEmail(loginOrEmail);
+    const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
 
     if (!user) {
       return {
@@ -75,7 +83,7 @@ export const authService = {
       };
     }
 
-    const isPasswordCorrect = await bcryptService.compare(
+    const isPasswordCorrect = await this.bcryptService.compare(
       password,
       user.passwordHash,
     );
@@ -93,21 +101,21 @@ export const authService = {
       extensions: [],
       data: user,
     };
-  },
+  }
 
   async registration(
     dto: RegistrationDto,
   ): Promise<Result<null, ResultStatus.Success | ResultStatus.BadRequest>> {
-    const result = await usersService.create(dto);
+    const result = await this.usersService.create(dto);
 
     if (result.status !== ResultStatus.Success) {
       return result;
     }
 
-    emailService
+    this.emailService
       .sendEmail(
         dto.email,
-        emailManager.emailConfirmation(
+        this.emailManager.emailConfirmation(
           result.data.user.emailConfirmation.confirmationCode,
         ),
         'Confirm email',
@@ -119,7 +127,7 @@ export const authService = {
       extensions: [],
       data: null,
     };
-  },
+  }
 
   async resendConfirmationCode(
     dto: RegistrationEmailResendingDto,
@@ -129,7 +137,7 @@ export const authService = {
       ResultStatus.Success | ResultStatus.BadRequest | ResultStatus.ServerError
     >
   > {
-    const user = await usersRepository.findByEmail(dto.email);
+    const user = await this.usersRepository.findByEmail(dto.email);
 
     if (!user || user?.emailConfirmation.isConfirmed) {
       return {
@@ -141,7 +149,7 @@ export const authService = {
 
     if (user) {
       const newEmailConfirmation = UserEntity.generateEmailConfirmationData();
-      const isUpdated = await usersRepository.update(user._id.toString(), {
+      const isUpdated = await this.usersRepository.update(user._id.toString(), {
         emailConfirmation: newEmailConfirmation,
       });
 
@@ -154,10 +162,12 @@ export const authService = {
         };
       }
 
-      emailService
+      this.emailService
         .sendEmail(
           dto.email,
-          emailManager.emailConfirmation(newEmailConfirmation.confirmationCode),
+          this.emailManager.emailConfirmation(
+            newEmailConfirmation.confirmationCode,
+          ),
           'Confirm email',
         )
         .catch((error) => console.warn(error));
@@ -168,7 +178,7 @@ export const authService = {
       extensions: [],
       data: null,
     };
-  },
+  }
 
   async confirmCode(
     dto: RegistrationConfirmationDto,
@@ -178,7 +188,9 @@ export const authService = {
       ResultStatus.Success | ResultStatus.BadRequest | ResultStatus.ServerError
     >
   > {
-    const user = await usersRepository.findByEmailConfirmationCode(dto.code);
+    const user = await this.usersRepository.findByEmailConfirmationCode(
+      dto.code,
+    );
 
     if (
       !user ||
@@ -192,7 +204,7 @@ export const authService = {
       };
     }
 
-    const isUpdated = await usersRepository.update(user._id.toString(), {
+    const isUpdated = await this.usersRepository.update(user._id.toString(), {
       emailConfirmation: {
         ...user.emailConfirmation,
         isConfirmed: true,
@@ -213,7 +225,7 @@ export const authService = {
       extensions: [],
       data: null,
     };
-  },
+  }
   async regenerateTokens({
     deviceId,
     userId,
@@ -221,12 +233,12 @@ export const authService = {
   }: RefreshTokenUpdateDto): Promise<
     Result<{ accessToken: string; refreshToken: string }>
   > {
-    const { data } = await jwtService.generateTokens(userId, deviceId);
-    const refreshTokenPayload = jwtService.decodeRefreshToken(
+    const { data } = await this.jwtService.generateTokens(userId, deviceId);
+    const refreshTokenPayload = this.jwtService.decodeRefreshToken(
       data.refreshToken,
     );
 
-    await securityDevicesService.update(
+    await this.securityDevicesService.update(
       { deviceId, issuedAt },
       {
         refreshToken: refreshTokenPayload,
@@ -238,5 +250,5 @@ export const authService = {
       extensions: [],
       data,
     };
-  },
-};
+  }
+}

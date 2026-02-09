@@ -18,6 +18,12 @@ import { PostsController } from './posts/routers/posts.controller';
 import { CommentsController } from './comments/routers/comments.controller';
 import { BlogsService } from './blogs/application/blogs.service';
 import { BlogsController } from './blogs/routers/blogs.controller';
+import { BcryptService } from './auth/application/bcrypt.service';
+import { EmailService } from './auth/application/email.service';
+import { EmailManager } from './auth/application/email.manager';
+import { AuthService } from './auth/application/auth.service';
+import { JwtService } from './auth/application/jwt.service';
+import { AuthController } from './auth/routers/auth.controller';
 
 export const blogsRepository = new BlogsRepository();
 export const commentsRepository = new CommentsRepository();
@@ -32,18 +38,36 @@ export const securityDevicesQueryRepository =
   new SecurityDevicesQueryRepository();
 export const usersQueryRepository = new UsersQueryRepository();
 
+export const bcryptService = new BcryptService();
 export const blogsService = new BlogsService(blogsRepository);
 export const commentsService = new CommentsService(
   commentsRepository,
   postsRepository,
   usersRepository,
 );
+export const emailService = new EmailService();
+export const emailManager = new EmailManager();
+export const jwtService = new JwtService();
 export const postsService = new PostsService(postsRepository, blogsRepository);
 export const securityDevicesService = new SecurityDevicesService(
   securityDevicesRepository,
 );
-export const usersService = new UsersService(usersRepository);
+export const usersService = new UsersService(usersRepository, bcryptService);
+export const authService = new AuthService(
+  jwtService,
+  bcryptService,
+  emailService,
+  emailManager,
+  securityDevicesService,
+  usersService,
+  usersRepository,
+);
 
+export const authController = new AuthController(
+  authService,
+  securityDevicesService,
+  usersQueryRepository,
+);
 export const blogController = new BlogsController(
   blogsService,
   blogsQueryRepository,

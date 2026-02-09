@@ -5,15 +5,9 @@ import { registrationEmailResendingValidationMiddleware } from '../validation/re
 import { userCreateDtoValidationMiddleware } from '../../users/validation/user-create-dto-validation.middleware';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
-import { loginHandler } from './handlers/login.handler';
-import { logoutHandler } from './handlers/logout.handler';
-import { meHandler } from './handlers/me.handler';
-import { refreshTokenHandler } from './handlers/refresh-token.handler';
-import { registrationHandler } from './handlers/registration.handler';
-import { registrationConfirmationHandler } from './handlers/registration-confirmation.handler';
-import { registrationEmailResendingHandler } from './handlers/registration-email-resending.handler';
 import { refreshTokenGuard } from '../../core/middlewares/guard/refresh-token.guard';
 import { getRateLimitMiddleware } from '../../core/middlewares/rate-limit.middleware';
+import { authController } from '../../composition.root';
 
 export const authRouter = Router({});
 
@@ -23,29 +17,29 @@ authRouter
     getRateLimitMiddleware(),
     loginDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    loginHandler,
+    authController.login,
   )
-  .post('/logout', refreshTokenGuard, logoutHandler)
-  .get('/me', accessTokenGuard, meHandler)
-  .post('/refresh-token', refreshTokenGuard, refreshTokenHandler)
+  .post('/logout', refreshTokenGuard, authController.logout)
+  .get('/me', accessTokenGuard, authController.me)
+  .post('/refresh-token', refreshTokenGuard, authController.refreshToken)
   .post(
     '/registration',
     getRateLimitMiddleware(),
     userCreateDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    registrationHandler,
+    authController.registration,
   )
   .post(
     '/registration-confirmation',
     getRateLimitMiddleware(),
     registrationConfirmationValidationMiddleware,
     reqValidationResultMiddleware,
-    registrationConfirmationHandler,
+    authController.registrationConfirmation,
   )
   .post(
     '/registration-email-resending',
     getRateLimitMiddleware(),
     registrationEmailResendingValidationMiddleware,
     reqValidationResultMiddleware,
-    registrationEmailResendingHandler,
+    authController.registrationEmailResending,
   );

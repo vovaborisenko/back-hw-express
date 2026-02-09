@@ -1,30 +1,31 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import {
   Cookies,
   RefreshTokenCookiesOptions,
 } from '../../../core/cookies/cookies';
 import { HttpStatus } from '../../../core/types/http-status';
 import { ResultStatus } from '../../../core/types/result-object';
-import { securityDevicesService } from '../../../composition.root';
+import { SecurityDevicesService } from '../../../security-devices/application/security-devices.service';
 
-export async function logoutHandler(
-  req: Request,
-  res: Response,
-): Promise<void> {
-  const userId = req.user!.id;
-  const deviceId = req.device!.id;
+export function createLogoutHandler(
+  securityDevicesService: SecurityDevicesService,
+): RequestHandler<{}, undefined> {
+  return async function (req, res) {
+    const userId = req.user!.id;
+    const deviceId = req.device!.id;
 
-  const result = await securityDevicesService.deleteOnLogout({
-    userId,
-    deviceId,
-  });
+    const result = await securityDevicesService.deleteOnLogout({
+      userId,
+      deviceId,
+    });
 
-  if (result.status !== ResultStatus.Success) {
-    res.sendStatus(HttpStatus.BadRequest);
+    if (result.status !== ResultStatus.Success) {
+      res.sendStatus(HttpStatus.BadRequest);
 
-    return;
-  }
+      return;
+    }
 
-  res.clearCookie(Cookies.RefreshToken, RefreshTokenCookiesOptions);
-  res.sendStatus(HttpStatus.NoContent);
+    res.clearCookie(Cookies.RefreshToken, RefreshTokenCookiesOptions);
+    res.sendStatus(HttpStatus.NoContent);
+  };
 }
