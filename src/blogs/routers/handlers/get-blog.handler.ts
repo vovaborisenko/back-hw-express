@@ -1,18 +1,19 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { BlogViewModel } from '../../types/blog.view-model';
 import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
-import { blogsQueryRepository } from '../../../composition.root';
+import { BlogsQueryRepository } from '../../repositories/blogs.query-repository';
 
-export async function getBlogHandler(
-  req: Request<{ id: string }>,
-  res: Response<BlogViewModel>,
-) {
-  const blog = await blogsQueryRepository.findById(req.params.id);
+export function createGetBlogHandler(
+  blogsQueryRepository: BlogsQueryRepository,
+): RequestHandler<{ id: string }, BlogViewModel> {
+  return async function (req, res) {
+    const blog = await blogsQueryRepository.findById(req.params.id);
 
-  if (!blog) {
-    throw new NotExistError('Blog');
-  }
+    if (!blog) {
+      throw new NotExistError('Blog');
+    }
 
-  res.json(mapToBlogViewModel(blog));
+    res.json(mapToBlogViewModel(blog));
+  };
 }

@@ -16,6 +16,8 @@ import { CommentsService } from './comments/application/comments.service';
 import { BlogsQueryRepository } from './blogs/repositories/blogs.query-repository';
 import { PostsController } from './posts/routers/posts.controller';
 import { CommentsController } from './comments/routers/comments.controller';
+import { BlogsService } from './blogs/application/blogs.service';
+import { BlogsController } from './blogs/routers/blogs.controller';
 
 export const blogsRepository = new BlogsRepository();
 export const commentsRepository = new CommentsRepository();
@@ -30,6 +32,7 @@ export const securityDevicesQueryRepository =
   new SecurityDevicesQueryRepository();
 export const usersQueryRepository = new UsersQueryRepository();
 
+export const blogsService = new BlogsService(blogsRepository);
 export const commentsService = new CommentsService(
   commentsRepository,
   postsRepository,
@@ -41,6 +44,12 @@ export const securityDevicesService = new SecurityDevicesService(
 );
 export const usersService = new UsersService(usersRepository);
 
+export const blogController = new BlogsController(
+  blogsService,
+  blogsQueryRepository,
+  postsService,
+  postsQueryRepository,
+);
 export const commentsController = new CommentsController(
   commentsService,
   commentsQueryRepository,

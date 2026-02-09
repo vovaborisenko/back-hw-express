@@ -1,11 +1,4 @@
 import { Router } from 'express';
-import { getBlogListHandler } from './handlers/get-blog-list.handler';
-import { getBlogHandler } from './handlers/get-blog.handler';
-import { createBlogHandler } from './handlers/create-blog.handler';
-import { updateBlogHandler } from './handlers/update-blog.handler';
-import { deleteBlogHandler } from './handlers/delete-blog.handler';
-import { getBlogPostListHandler } from './handlers/get-blog-post-list.handler';
-import { createBlogPostHandler } from './handlers/create-blog-post.handler';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { blogDtoValidationMiddleware } from '../validation/blog-dto-validation.middleware';
@@ -13,6 +6,7 @@ import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-ad
 import { queryBlogListValidationMiddleware } from '../validation/query-blog-list-validation.middleware';
 import { queryPostListValidationMiddleware } from '../../posts/validation/query-post-list-validation.middleware';
 import { blogPostDtoValidationMiddleware } from '../validation/blog-post-dto-validation.middleware';
+import { blogController } from '../../composition.root';
 
 export const blogsRouter = Router({});
 
@@ -21,7 +15,7 @@ blogsRouter
     '/',
     queryBlogListValidationMiddleware,
     reqValidationResultMiddleware,
-    getBlogListHandler,
+    blogController.getItems,
   )
 
   .post(
@@ -29,14 +23,14 @@ blogsRouter
     superAdminGuardMiddleware,
     blogDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    createBlogHandler,
+    blogController.createItem,
   )
 
   .get(
     '/:id',
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
-    getBlogHandler,
+    blogController.getItem,
   )
 
   .put(
@@ -45,7 +39,7 @@ blogsRouter
     paramIdValidationMiddleware(),
     blogDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    updateBlogHandler,
+    blogController.updateItem,
   )
 
   .delete(
@@ -53,7 +47,7 @@ blogsRouter
     superAdminGuardMiddleware,
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
-    deleteBlogHandler,
+    blogController.deleteItem,
   )
 
   .get(
@@ -61,7 +55,7 @@ blogsRouter
     paramIdValidationMiddleware(),
     queryPostListValidationMiddleware,
     reqValidationResultMiddleware,
-    getBlogPostListHandler,
+    blogController.getItemPosts,
   )
 
   .post(
@@ -69,5 +63,5 @@ blogsRouter
     superAdminGuardMiddleware,
     blogPostDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    createBlogPostHandler,
+    blogController.createItemPost,
   );

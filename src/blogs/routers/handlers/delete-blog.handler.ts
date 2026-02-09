@@ -1,12 +1,13 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { blogsService } from '../../application/blogs.service';
+import { BlogsService } from '../../application/blogs.service';
 
-export async function deleteBlogHandler(
-  req: Request<{ id: string }>,
-  res: Response,
-) {
-  await blogsService.delete(req.params.id);
+export function createDeleteBlogHandler(
+  blogsService: BlogsService,
+): RequestHandler<{ id: string }, undefined> {
+  return async function (req, res) {
+    await blogsService.delete(req.params.id);
 
-  res.sendStatus(HttpStatus.NoContent);
+    res.sendStatus(HttpStatus.NoContent);
+  };
 }

@@ -1,13 +1,14 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { blogsService } from '../../application/blogs.service';
 import { BlogUpdateDto } from '../../dto/blog.update-dto';
+import { BlogsService } from '../../application/blogs.service';
 
-export async function updateBlogHandler(
-  req: Request<{ id: string }, {}, BlogUpdateDto>,
-  res: Response<undefined>,
-) {
-  await blogsService.update(req.params.id, req.body);
+export function createUpdateBlogHandler(
+  blogsService: BlogsService,
+): RequestHandler<{ id: string }, undefined, BlogUpdateDto> {
+  return async function (req, res) {
+    await blogsService.update(req.params.id, req.body);
 
-  res.sendStatus(HttpStatus.NoContent);
+    res.sendStatus(HttpStatus.NoContent);
+  };
 }
