@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { commentsService } from '../../application/comments.service';
+import { commentsService } from '../../../composition.root';
 import { ResultStatus } from '../../../core/types/result-object';
 import { resultStatusToHttpStatus } from '../../../core/utils/result-status-to-http-status';
 

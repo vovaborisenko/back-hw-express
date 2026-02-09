@@ -4,7 +4,7 @@ import { BlogViewModel } from '../../types/blog.view-model';
 import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 import { Paginated } from '../../../core/types/paginated';
 import { QueryBlogList } from '../../input/query-blog-list';
-import { blogsQueryRepository } from '../../repositories/blogs.query-repository';
+import { blogsQueryRepository } from '../../../composition.root';
 
 export async function getBlogListHandler(
   req: Request,

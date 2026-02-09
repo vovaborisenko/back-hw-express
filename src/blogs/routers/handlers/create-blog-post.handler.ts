@@ -2,8 +2,7 @@ import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../../posts/types/post.view-model';
-import { postsService } from '../../../posts/application/posts.service';
-import { postsQueryRepository } from '../../../posts/repositories/posts.query-repository';
+import { postsQueryRepository, postsService } from '../../../composition.root';
 import { mapToPostViewModel } from '../../../posts/routers/mappers/map-to-post-view-model';
 import { BlogPostCreateDto } from '../../dto/blog-post.create-dto';
 

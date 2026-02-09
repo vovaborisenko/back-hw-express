@@ -5,7 +5,7 @@ import { BlogViewModel } from '../../types/blog.view-model';
 import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 import { blogsService } from '../../application/blogs.service';
 import { NotExistError } from '../../../core/errors/not-exist.error';
-import { blogsQueryRepository } from '../../repositories/blogs.query-repository';
+import { blogsQueryRepository } from '../../../composition.root';
 
 export async function createBlogHandler(
   req: Request<{}, {}, BlogCreateDto>,

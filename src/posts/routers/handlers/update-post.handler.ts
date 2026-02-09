@@ -1,21 +1,23 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { blogsQueryRepository } from '../../../blogs/repositories/blogs.query-repository';
+import { BlogsQueryRepository } from '../../../blogs/repositories/blogs.query-repository';
 import { PostUpdateDto } from '../../dto/post.update-dto';
-import { postsService } from '../../application/posts.service';
+import { PostsService } from '../../application/posts.service';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 
-export async function updatePostHandler(
-  req: Request<{ id: string }, {}, PostUpdateDto>,
-  res: Response<undefined>,
-) {
-  const blog = await blogsQueryRepository.findById(req.body.blogId);
+export function createUpdatePostHandler(
+  postsService: PostsService,
+  blogsQueryRepository: BlogsQueryRepository,
+): RequestHandler<{ id: string }, undefined, PostUpdateDto> {
+  return async function updatePostHandler(req, res) {
+    const blog = await blogsQueryRepository.findById(req.body.blogId);
 
-  if (!blog) {
-    throw new NotExistError('Blog');
-  }
+    if (!blog) {
+      throw new NotExistError('Blog');
+    }
 
-  await postsService.update(req.params.id, req.body);
+    await postsService.update(req.params.id, req.body);
 
-  res.sendStatus(HttpStatus.NoContent);
+    res.sendStatus(HttpStatus.NoContent);
+  };
 }

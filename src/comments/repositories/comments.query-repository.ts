@@ -4,7 +4,7 @@ import { commentCollection, USER_COLLECTION_NAME } from '../../db/mongo.db';
 import { QueryCommentList } from '../input/query-comment-list';
 import { SortDirection } from '../../core/types/sort-direction';
 
-export const commentsQueryRepository = {
+export class CommentsQueryRepository {
   async findMany(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryCommentList,
     postId?: string,
@@ -39,7 +39,7 @@ export const commentsQueryRepository = {
     ]);
 
     return { items, totalCount };
-  },
+  }
 
   async findById(id: string): Promise<WithId<AggregatedComment> | null> {
     const [result] = await commentCollection
@@ -55,8 +55,8 @@ export const commentsQueryRepository = {
       .toArray();
 
     return result || null;
-  },
-};
+  }
+}
 
 function getBaseAggregation() {
   return [

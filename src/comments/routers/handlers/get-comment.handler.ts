@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { mapToCommentViewModel } from '../mappers/map-to-comment-view-model';
 import { CommentViewModel } from '../../types/comment.view-model';
-import { commentsQueryRepository } from '../../repositories/comments.query-repository';
+import { commentsQueryRepository } from '../../../composition.root';
 import { HttpStatus } from '../../../core/types/http-status';
 
 export async function getCommentHandler(

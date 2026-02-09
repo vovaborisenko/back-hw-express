@@ -1,22 +1,24 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { postsService } from '../../application/posts.service';
-import { postsQueryRepository } from '../../repositories/posts.query-repository';
 import { PostCreateDto } from '../../dto/post.create-dto';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../types/post.view-model';
 import { mapToPostViewModel } from '../mappers/map-to-post-view-model';
+import { PostsService } from '../../application/posts.service';
+import { PostsQueryRepository } from '../../repositories/posts.query-repository';
 
-export async function createPostHandler(
-  req: Request<{}, {}, PostCreateDto>,
-  res: Response<PostViewModel>,
-) {
-  const createdPostId = await postsService.create(req.body);
-  const createdPost = await postsQueryRepository.findById(createdPostId);
+export function createCreatePostHandler(
+  postsService: PostsService,
+  postsQueryRepository: PostsQueryRepository,
+): RequestHandler<{}, PostViewModel, PostCreateDto> {
+  return async function (req, res) {
+    const createdPostId = await postsService.create(req.body);
+    const createdPost = await postsQueryRepository.findById(createdPostId);
 
-  if (!createdPost) {
-    throw new NotExistError('Post');
-  }
+    if (!createdPost) {
+      throw new NotExistError('Post');
+    }
 
-  res.status(HttpStatus.Created).json(mapToPostViewModel(createdPost));
+    res.status(HttpStatus.Created).json(mapToPostViewModel(createdPost));
+  };
 }

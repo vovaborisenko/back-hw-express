@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { CommentUpdateDto } from '../../dto/comment.update-dto';
-import { commentsService } from '../../application/comments.service';
+import { commentsService } from '../../../composition.root';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
 import { ErrorMessages } from '../../../core/types/validation';
 import { ResultStatus } from '../../../core/types/result-object';

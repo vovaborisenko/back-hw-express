@@ -4,16 +4,16 @@ import { BlogUpdateDto } from '../dto/blog.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { blogCollection } from '../../db/mongo.db';
 
-export const blogsRepository = {
+export class BlogsRepository {
   findById(id: string): Promise<WithId<Blog> | null> {
     return blogCollection.findOne({ _id: new ObjectId(id) });
-  },
+  }
 
   async create(blog: Blog): Promise<string> {
     const insertResult = await blogCollection.insertOne(blog);
 
     return insertResult.insertedId.toString();
-  },
+  }
 
   async update(id: string, dto: BlogUpdateDto): Promise<void> {
     const updateResult = await blogCollection.updateOne(
@@ -30,7 +30,7 @@ export const blogsRepository = {
     if (updateResult.matchedCount < 1) {
       throw new NotExistError('Blog');
     }
-  },
+  }
 
   async delete(id: string): Promise<void> {
     const deleteResult = await blogCollection.deleteOne({
@@ -40,5 +40,5 @@ export const blogsRepository = {
     if (deleteResult.deletedCount < 1) {
       throw new NotExistError('Blog');
     }
-  },
-};
+  }
+}

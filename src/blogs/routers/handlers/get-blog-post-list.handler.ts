@@ -3,8 +3,10 @@ import { matchedData } from 'express-validator';
 import { Paginated } from '../../../core/types/paginated';
 import { PostViewModel } from '../../../posts/types/post.view-model';
 import { QueryPostList } from '../../../posts/input/query-post-list';
-import { blogsQueryRepository } from '../../repositories/blogs.query-repository';
-import { postsQueryRepository } from '../../../posts/repositories/posts.query-repository';
+import {
+  blogsQueryRepository,
+  postsQueryRepository,
+} from '../../../composition.root';
 import { mapToPostViewModel } from '../../../posts/routers/mappers/map-to-post-view-model';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 

@@ -1,4 +1,4 @@
-import { blogsRepository } from '../repositories/blogs.repository';
+import { blogsRepository } from '../../composition.root';
 import { BlogCreateDto } from '../dto/blog.create-dto';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
 
