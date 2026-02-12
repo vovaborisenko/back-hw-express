@@ -2,13 +2,13 @@ import { Filter, ObjectId, WithId } from 'mongodb';
 import { SecurityDevice } from '../types/security-device';
 import { securityDeviceCollection } from '../../db/mongo.db';
 
-export const securityDevicesRepository = {
+export class SecurityDevicesRepository {
   async create(securityDevice: SecurityDevice): Promise<string> {
     const insertedResult =
       await securityDeviceCollection.insertOne(securityDevice);
 
     return insertedResult.insertedId.toString();
-  },
+  }
   async update(
     filter: Partial<SecurityDevice>,
     securityDevice: Partial<SecurityDevice>,
@@ -18,7 +18,7 @@ export const securityDevicesRepository = {
     });
 
     return result.upsertedId?.toString();
-  },
+  }
 
   async deleteBy(
     device: Partial<Omit<SecurityDevice, 'userId'> & { userId: string }>,
@@ -34,7 +34,7 @@ export const securityDevicesRepository = {
     const deletedResult = await securityDeviceCollection.deleteOne(filter);
 
     return deletedResult.deletedCount > 0;
-  },
+  }
 
   async deleteOthersByUser({
     deviceId,
@@ -49,13 +49,13 @@ export const securityDevicesRepository = {
     });
 
     return deletedResult.deletedCount > 0;
-  },
+  }
 
   findById(id: string): Promise<WithId<SecurityDevice> | null> {
     return securityDeviceCollection.findOne({
       _id: new ObjectId(id),
     });
-  },
+  }
 
   findBy(
     device: Partial<Omit<SecurityDevice, 'userId'> & { userId: string }>,
@@ -69,5 +69,5 @@ export const securityDevicesRepository = {
     }
 
     return securityDeviceCollection.findOne(filter);
-  },
-};
+  }
+}

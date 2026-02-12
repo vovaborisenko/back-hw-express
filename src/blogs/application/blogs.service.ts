@@ -1,8 +1,10 @@
-import { blogsRepository } from '../repositories/blogs.repository';
+import { BlogsRepository } from '../repositories/blogs.repository';
 import { BlogCreateDto } from '../dto/blog.create-dto';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
 
-export const blogsService = {
+export class BlogsService {
+  constructor(private readonly blogsRepository: BlogsRepository) {}
+
   create(dto: BlogCreateDto): Promise<string> {
     const newBlog = {
       name: dto.name,
@@ -12,14 +14,14 @@ export const blogsService = {
       createdAt: new Date(),
     };
 
-    return blogsRepository.create(newBlog);
-  },
+    return this.blogsRepository.create(newBlog);
+  }
 
   update(id: string, dto: BlogUpdateDto): Promise<void> {
-    return blogsRepository.update(id, dto);
-  },
+    return this.blogsRepository.update(id, dto);
+  }
 
   delete(id: string): Promise<void> {
-    return blogsRepository.delete(id);
-  },
-};
+    return this.blogsRepository.delete(id);
+  }
+}

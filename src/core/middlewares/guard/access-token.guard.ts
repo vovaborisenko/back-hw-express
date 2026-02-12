@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../types/http-status';
-import { jwtService } from '../../../auth/application/jwt.service';
+import { jwtService } from '../../../composition.root';
 
 export function accessTokenGuard(
   req: Request,

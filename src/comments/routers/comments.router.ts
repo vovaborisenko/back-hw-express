@@ -1,11 +1,9 @@
 import { Router } from 'express';
 import { paramIdValidationMiddleware } from '../../core/middlewares/validation/param-id-validation.middleware';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
-import { getCommentHandler } from './handlers/get-comment.handler';
-import { updateCommentHandler } from './handlers/update-comment.handler';
-import { deleteCommentHandler } from './handlers/delete-comment.handler';
 import { commentUpdateDtoValidationMiddleware } from '../validation/comment-update-dto-validation.middleware';
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
+import { commentsController } from '../../composition.root';
 
 export const commentsRouter = Router({});
 
@@ -14,7 +12,7 @@ commentsRouter
     '/:id',
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
-    getCommentHandler,
+    commentsController.getItem,
   )
 
   .put(
@@ -23,7 +21,7 @@ commentsRouter
     paramIdValidationMiddleware(),
     commentUpdateDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    updateCommentHandler,
+    commentsController.updateItem,
   )
 
   .delete(
@@ -31,5 +29,5 @@ commentsRouter
     accessTokenGuard,
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
-    deleteCommentHandler,
+    commentsController.deleteItem,
   );

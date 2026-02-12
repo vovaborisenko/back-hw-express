@@ -4,24 +4,24 @@ import { RefreshTokenPayload, TokenPayload } from '../types/auth';
 import { Result, ResultStatus } from '../../core/types/result-object';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 
-export const jwtService = {
+export class JwtService {
   createToken(userId: string): string {
     return jsonwebtoken.sign({ userId }, SETTINGS.AC_SECRET, {
       expiresIn: Number(SETTINGS.AC_TIME),
     });
-  },
+  }
   verifyToken(token: string): TokenPayload | null {
     try {
       return jsonwebtoken.verify(token, SETTINGS.AC_SECRET) as TokenPayload;
     } catch {
       return null;
     }
-  },
+  }
   createRefreshToken(dto: RefreshTokenDto): string {
     return jsonwebtoken.sign(dto, SETTINGS.REFRESH_SECRET, {
       expiresIn: Number(SETTINGS.REFRESH_TIME),
     });
-  },
+  }
   async generateTokens(
     userId: string,
     deviceId: string = crypto.randomUUID(),
@@ -40,7 +40,7 @@ export const jwtService = {
         refreshToken,
       },
     };
-  },
+  }
   verifyRefreshToken(token: string): RefreshTokenPayload | null {
     try {
       return jsonwebtoken.verify(
@@ -50,8 +50,8 @@ export const jwtService = {
     } catch {
       return null;
     }
-  },
+  }
   decodeRefreshToken(token: string): RefreshTokenPayload {
     return jsonwebtoken.decode(token) as RefreshTokenPayload;
-  },
-};
+  }
+}

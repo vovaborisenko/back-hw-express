@@ -3,7 +3,7 @@ import { Blog } from '../types/blog';
 import { blogCollection } from '../../db/mongo.db';
 import { QueryBlogList } from '../input/query-blog-list';
 
-export const blogsQueryRepository = {
+export class BlogsQueryRepository {
   async findMany({
     pageSize,
     pageNumber,
@@ -33,9 +33,9 @@ export const blogsQueryRepository = {
     ]);
 
     return { items, totalCount };
-  },
+  }
 
   findById(id: string): Promise<WithId<Blog> | null> {
     return blogCollection.findOne({ _id: new ObjectId(id) });
-  },
-};
+  }
+}

@@ -3,7 +3,7 @@ import { User } from '../types/user';
 import { userCollection } from '../../db/mongo.db';
 import { QueryUserList } from '../input/query-user-list';
 
-export const usersQueryRepository = {
+export class UsersQueryRepository {
   async findMany({
     pageSize,
     pageNumber,
@@ -42,9 +42,9 @@ export const usersQueryRepository = {
     ]);
 
     return { items, totalCount };
-  },
+  }
 
   findById(id: string): Promise<WithId<User> | null> {
     return userCollection.findOne({ _id: new ObjectId(id) });
-  },
-};
+  }
+}

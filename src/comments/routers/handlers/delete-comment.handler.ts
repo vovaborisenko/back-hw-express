@@ -1,28 +1,23 @@
-import { Request, Response } from 'express';
+import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
-import { commentsService } from '../../application/comments.service';
+import { CommentsService } from '../../application/comments.service';
 import { ResultStatus } from '../../../core/types/result-object';
 import { resultStatusToHttpStatus } from '../../../core/utils/result-status-to-http-status';
 
-export async function deleteCommentHandler(
-  req: Request<{ id: string }>,
-  res: Response,
-): Promise<void> {
-  const userId = req.user?.id;
+export function createDeleteCommentHandler(
+  commentsService: CommentsService,
+): RequestHandler<{ id: string }, undefined> {
+  return async function deleteCommentHandler(req, res) {
+    const userId = req.user!.id;
 
-  if (!userId) {
-    res.sendStatus(HttpStatus.Unauthorized);
+    const result = await commentsService.delete(req.params.id, userId);
 
-    return;
-  }
+    if (result.status !== ResultStatus.Success) {
+      res.sendStatus(resultStatusToHttpStatus(result.status));
 
-  const result = await commentsService.delete(req.params.id, userId);
+      return;
+    }
 
-  if (result.status !== ResultStatus.Success) {
-    res.sendStatus(resultStatusToHttpStatus(result.status));
-
-    return;
-  }
-
-  res.sendStatus(HttpStatus.NoContent);
+    res.sendStatus(HttpStatus.NoContent);
+  };
 }

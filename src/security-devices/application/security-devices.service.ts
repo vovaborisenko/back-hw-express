@@ -1,5 +1,5 @@
 import { Result, ResultStatus } from '../../core/types/result-object';
-import { securityDevicesRepository } from '../repositories/security-devices.repository';
+import { SecurityDevicesRepository } from '../repositories/security-devices.repository';
 import { SecurityDeviceCreateDto } from '../dto/security-device.create-dto';
 import { SecurityDeviceCheckDto } from '../dto/security-device.check-dto';
 import { ObjectId } from 'mongodb';
@@ -8,7 +8,11 @@ import { SecurityDeviceLogoutDto } from '../dto/security-device.logout-dto';
 import { SecurityDeviceDeleteAllDto } from '../dto/security-device.delete-all-dto';
 import { SecurityDeviceUpdateDto } from '../dto/security-device.update-dto';
 
-export const securityDevicesService = {
+export class SecurityDevicesService {
+  constructor(
+    private readonly securityDevicesRepository: SecurityDevicesRepository,
+  ) {}
+
   async create({
     ip = '',
     refreshToken,
@@ -29,14 +33,14 @@ export const securityDevicesService = {
       userId: new ObjectId(refreshToken.userId),
     };
 
-    const id = await securityDevicesRepository.create(securityDevice);
+    const id = await this.securityDevicesRepository.create(securityDevice);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
       data: id,
     };
-  },
+  }
   async update(
     filter: { deviceId: string; issuedAt: Date },
     { refreshToken }: SecurityDeviceUpdateDto,
@@ -48,21 +52,24 @@ export const securityDevicesService = {
       issuedAt: parseJwtTime(refreshToken.iat),
     };
 
-    const id = await securityDevicesRepository.update(filter, securityDevice);
+    const id = await this.securityDevicesRepository.update(
+      filter,
+      securityDevice,
+    );
 
     return {
       status: ResultStatus.Success,
       extensions: [],
       data: id,
     };
-  },
+  }
   async check({
     deviceId,
     iat,
   }: SecurityDeviceCheckDto): Promise<
     Result | Result<null, ResultStatus.Unauthorised>
   > {
-    const securityDevice = await securityDevicesRepository.findBy({
+    const securityDevice = await this.securityDevicesRepository.findBy({
       issuedAt: parseJwtTime(iat),
       deviceId,
     });
@@ -80,25 +87,25 @@ export const securityDevicesService = {
       extensions: [],
       data: null,
     };
-  },
+  }
   async deleteOnLogout(dto: SecurityDeviceLogoutDto): Promise<Result> {
-    await securityDevicesRepository.deleteBy(dto);
+    await this.securityDevicesRepository.deleteBy(dto);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
       data: null,
     };
-  },
+  }
   async deleteAllByUser(dto: SecurityDeviceDeleteAllDto): Promise<Result> {
-    await securityDevicesRepository.deleteOthersByUser(dto);
+    await this.securityDevicesRepository.deleteOthersByUser(dto);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
       data: null,
     };
-  },
+  }
   async delete(
     deviceId: string,
     userId: string,
@@ -108,7 +115,7 @@ export const securityDevicesService = {
       ResultStatus.Success | ResultStatus.NotFound | ResultStatus.Forbidden
     >
   > {
-    const securityDevice = await securityDevicesRepository.findBy({
+    const securityDevice = await this.securityDevicesRepository.findBy({
       deviceId,
     });
 
@@ -128,7 +135,7 @@ export const securityDevicesService = {
       };
     }
 
-    const isDeviceDeleted = await securityDevicesRepository.deleteBy({
+    const isDeviceDeleted = await this.securityDevicesRepository.deleteBy({
       deviceId,
     });
 
@@ -145,5 +152,5 @@ export const securityDevicesService = {
       extensions: [],
       data: null,
     };
-  },
-};
+  }
+}

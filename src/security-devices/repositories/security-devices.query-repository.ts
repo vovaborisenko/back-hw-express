@@ -2,7 +2,7 @@ import { ObjectId, WithId } from 'mongodb';
 import { SecurityDevice } from '../types/security-device';
 import { securityDeviceCollection } from '../../db/mongo.db';
 
-export const securityDevicesQueryRepository = {
+export class SecurityDevicesQueryRepository {
   findActiveByUserId(userId: string): Promise<WithId<SecurityDevice>[]> {
     return securityDeviceCollection
       .find({
@@ -10,5 +10,5 @@ export const securityDevicesQueryRepository = {
         expiredAt: { $gte: new Date() },
       })
       .toArray();
-  },
-};
+  }
+}

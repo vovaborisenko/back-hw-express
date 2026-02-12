@@ -15,18 +15,18 @@ export function getRateLimitMiddleware(
   ) {
     const { ip = '', originalUrl: url } = req;
 
+    const count = await logsQueryRepository.countByIpUrlPeriod(ip, url, period);
+
+    if (count >= maxAttempts) {
+      res.sendStatus(HttpStatus.TooManyRequests);
+      return;
+    }
+
     await logsService.create({
       ip,
       url,
       date: new Date(),
     });
-
-    const count = await logsQueryRepository.countByIpUrlPeriod(ip, url, period);
-
-    if (count > maxAttempts) {
-      res.sendStatus(HttpStatus.TooManyRequests);
-      return;
-    }
 
     next();
   };

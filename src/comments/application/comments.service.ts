@@ -1,17 +1,23 @@
 import { CommentCreateDto } from '../dto/comment.create-dto';
 import { CommentUpdateDto } from '../dto/comment.update-dto';
-import { commentsRepository } from '../repositories/comments.repository';
-import { postsRepository } from '../../posts/repositories/posts.repository';
-import { usersRepository } from '../../users/repositories/users.repository';
+import { CommentsRepository } from '../repositories/comments.repository';
+import { PostsRepository } from '../../posts/repositories/posts.repository';
+import { UsersRepository } from '../../users/repositories/users.repository';
 import { Result, ResultStatus } from '../../core/types/result-object';
 
-export const commentsService = {
+export class CommentsService {
+  constructor(
+    private readonly commentsRepository: CommentsRepository,
+    private readonly postsRepository: PostsRepository,
+    private readonly usersRepository: UsersRepository,
+  ) {}
+
   async create(
     dto: CommentCreateDto,
     postId: string,
     userId: string,
   ): Promise<Result<string> | Result<null, ResultStatus.NotFound>> {
-    const user = await usersRepository.findById(userId);
+    const user = await this.usersRepository.findById(userId);
 
     if (!user) {
       return {
@@ -21,7 +27,7 @@ export const commentsService = {
       };
     }
 
-    const post = await postsRepository.findById(postId);
+    const post = await this.postsRepository.findById(postId);
 
     if (!post) {
       return {
@@ -41,9 +47,9 @@ export const commentsService = {
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: await commentsRepository.create(newComment),
+      data: await this.commentsRepository.create(newComment),
     };
-  },
+  }
 
   async update(
     id: string,
@@ -55,7 +61,7 @@ export const commentsService = {
       ResultStatus.Success | ResultStatus.NotFound | ResultStatus.Forbidden
     >
   > {
-    const comment = await commentsRepository.findById(id);
+    const comment = await this.commentsRepository.findById(id);
 
     if (!comment) {
       return {
@@ -73,14 +79,14 @@ export const commentsService = {
       };
     }
 
-    const isSuccess = await commentsRepository.update(id, dto);
+    const isSuccess = await this.commentsRepository.update(id, dto);
 
     return {
       status: isSuccess ? ResultStatus.Success : ResultStatus.NotFound,
       extensions: [],
       data: null,
     };
-  },
+  }
 
   async delete(
     id: string,
@@ -91,7 +97,7 @@ export const commentsService = {
       ResultStatus.Success | ResultStatus.NotFound | ResultStatus.Forbidden
     >
   > {
-    const comment = await commentsRepository.findById(id);
+    const comment = await this.commentsRepository.findById(id);
 
     if (!comment) {
       return {
@@ -109,12 +115,12 @@ export const commentsService = {
       };
     }
 
-    const isSuccess = await commentsRepository.delete(id);
+    const isSuccess = await this.commentsRepository.delete(id);
 
     return {
       status: isSuccess ? ResultStatus.Success : ResultStatus.NotFound,
       extensions: [],
       data: null,
     };
-  },
-};
+  }
+}

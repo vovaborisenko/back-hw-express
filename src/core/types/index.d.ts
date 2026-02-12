@@ -1,10 +1,11 @@
 import { ReqDevice, ReqUser } from '../../auth/types/auth';
 
-declare module 'express' {
-  // Inject additional properties on express.Request
-  interface Request {
-    user?: ReqUser;
-    device?: ReqDevice;
+declare global {
+  namespace Express {
+    interface Request {
+      user?: ReqUser;
+      device?: ReqDevice;
+    }
   }
 }
 

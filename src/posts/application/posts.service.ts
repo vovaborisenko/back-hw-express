@@ -1,13 +1,18 @@
 import { ObjectId } from 'mongodb';
-import { postsRepository } from '../repositories/posts.repository';
+import { PostsRepository } from '../repositories/posts.repository';
 import { PostCreateDto } from '../dto/post.create-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { PostUpdateDto } from '../dto/post.update-dto';
-import { blogsRepository } from '../../blogs/repositories/blogs.repository';
+import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 
-export const postsService = {
+export class PostsService {
+  constructor(
+    private readonly postsRepository: PostsRepository,
+    private readonly blogsRepository: BlogsRepository,
+  ) {}
+
   async create(dto: PostCreateDto): Promise<string> {
-    const blog = await blogsRepository.findById(dto.blogId);
+    const blog = await this.blogsRepository.findById(dto.blogId);
 
     if (!blog) {
       throw new NotExistError('Blog');
@@ -21,14 +26,14 @@ export const postsService = {
       createdAt: new Date(),
     };
 
-    return postsRepository.create(newPost);
-  },
+    return this.postsRepository.create(newPost);
+  }
 
   update(id: string, dto: PostUpdateDto): Promise<void> {
-    return postsRepository.update(id, dto);
-  },
+    return this.postsRepository.update(id, dto);
+  }
 
   delete(id: string): Promise<void> {
-    return postsRepository.delete(id);
-  },
-};
+    return this.postsRepository.delete(id);
+  }
+}

@@ -4,7 +4,7 @@ import { BLOG_COLLECTION_NAME, postCollection } from '../../db/mongo.db';
 import { QueryPostList } from '../input/query-post-list';
 import { SortDirection } from '../../core/types/sort-direction';
 
-export const postsQueryRepository = {
+export class PostsQueryRepository {
   async findMany(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryPostList,
     blogId?: string,
@@ -35,7 +35,7 @@ export const postsQueryRepository = {
     ]);
 
     return { items, totalCount };
-  },
+  }
 
   async findById(id: string): Promise<WithId<AggregatedPost> | null> {
     const [result] = await postCollection
@@ -51,8 +51,8 @@ export const postsQueryRepository = {
       .toArray();
 
     return result || null;
-  },
-};
+  }
+}
 
 function getBaseAggregation() {
   return [

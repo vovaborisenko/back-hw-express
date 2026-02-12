@@ -1,19 +1,15 @@
 import { Router } from 'express';
 import { loginDtoValidationMiddleware } from '../validation/login-dto-validation.middleware';
+import { passwordUpdateValidationMiddleware } from '../validation/password-update-validation.middleware';
+import { passwordRecoveryValidationMiddleware } from '../validation/password-recovery-validation.middleware';
 import { registrationConfirmationValidationMiddleware } from '../validation/registration-confirmation-validation.middleware';
 import { registrationEmailResendingValidationMiddleware } from '../validation/registration-email-resending-validation.middleware';
 import { userCreateDtoValidationMiddleware } from '../../users/validation/user-create-dto-validation.middleware';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
-import { loginHandler } from './handlers/login.handler';
-import { logoutHandler } from './handlers/logout.handler';
-import { meHandler } from './handlers/me.handler';
-import { refreshTokenHandler } from './handlers/refresh-token.handler';
-import { registrationHandler } from './handlers/registration.handler';
-import { registrationConfirmationHandler } from './handlers/registration-confirmation.handler';
-import { registrationEmailResendingHandler } from './handlers/registration-email-resending.handler';
 import { refreshTokenGuard } from '../../core/middlewares/guard/refresh-token.guard';
 import { getRateLimitMiddleware } from '../../core/middlewares/rate-limit.middleware';
+import { authController } from '../../composition.root';
 
 export const authRouter = Router({});
 
@@ -23,29 +19,43 @@ authRouter
     getRateLimitMiddleware(),
     loginDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    loginHandler,
+    authController.login,
   )
-  .post('/logout', refreshTokenGuard, logoutHandler)
-  .get('/me', accessTokenGuard, meHandler)
-  .post('/refresh-token', refreshTokenGuard, refreshTokenHandler)
+  .post('/logout', refreshTokenGuard, authController.logout)
+  .get('/me', accessTokenGuard, authController.me)
+  .post(
+    '/new-password',
+    getRateLimitMiddleware(),
+    passwordUpdateValidationMiddleware,
+    reqValidationResultMiddleware,
+    authController.passwordUpdate,
+  )
+  .post(
+    '/password-recovery',
+    getRateLimitMiddleware(),
+    passwordRecoveryValidationMiddleware,
+    reqValidationResultMiddleware,
+    authController.passwordRecovery,
+  )
+  .post('/refresh-token', refreshTokenGuard, authController.refreshToken)
   .post(
     '/registration',
     getRateLimitMiddleware(),
     userCreateDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    registrationHandler,
+    authController.registration,
   )
   .post(
     '/registration-confirmation',
     getRateLimitMiddleware(),
     registrationConfirmationValidationMiddleware,
     reqValidationResultMiddleware,
-    registrationConfirmationHandler,
+    authController.registrationConfirmation,
   )
   .post(
     '/registration-email-resending',
     getRateLimitMiddleware(),
     registrationEmailResendingValidationMiddleware,
     reqValidationResultMiddleware,
-    registrationEmailResendingHandler,
+    authController.registrationEmailResending,
   );
