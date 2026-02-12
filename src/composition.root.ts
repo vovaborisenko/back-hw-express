@@ -24,6 +24,7 @@ import { EmailManager } from './auth/application/email.manager';
 import { AuthService } from './auth/application/auth.service';
 import { JwtService } from './auth/application/jwt.service';
 import { AuthController } from './auth/routers/auth.controller';
+import { PasswordService } from './auth/application/password.service';
 
 export const blogsRepository = new BlogsRepository();
 export const commentsRepository = new CommentsRepository();
@@ -62,9 +63,16 @@ export const authService = new AuthService(
   usersService,
   usersRepository,
 );
+export const passwordService = new PasswordService(
+  usersService,
+  bcryptService,
+  emailService,
+  emailManager,
+);
 
 export const authController = new AuthController(
   authService,
+  passwordService,
   securityDevicesService,
   usersQueryRepository,
 );

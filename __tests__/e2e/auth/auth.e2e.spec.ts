@@ -7,7 +7,11 @@ import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
 import { validAuth } from '../constants/common';
-import { createUserAndLogin } from '../utils/user/user.util';
+import {
+  createUser,
+  createUserAndLogin,
+  userDto,
+} from '../utils/user/user.util';
 import { extractCookies } from '../utils/cookies/cookies';
 import { wait } from '../utils/core/wait';
 
@@ -47,6 +51,40 @@ describe('Auth API', () => {
       expect(jws.decode(token)?.userId).toBe(user.id);
       // @ts-ignore
       expect(jws.decode(refreshToken)?.userId).toBe(user.id);
+    });
+  });
+
+  describe(`POST ${PATH.AUTH}/new-password`, () => {
+    it('should return 400 if recovery code is wrong', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/new-password`)
+        .send({
+          recoveryCode: 'recovery-code',
+          newPassword: 'password',
+        })
+        .expect(HttpStatus.BadRequest);
+    });
+  });
+
+  describe(`POST ${PATH.AUTH}/password-recovery`, () => {
+    it('should return 204 if no user with current email', async () => {
+      await request(app)
+        .post(`${PATH.AUTH}/password-recovery`)
+        .send({
+          email: 'some@valid.email',
+        })
+        .expect(HttpStatus.NoContent);
+    });
+
+    it('should return 204 if user with current email', async () => {
+      const { email } = await createUser(app);
+
+      await request(app)
+        .post(`${PATH.AUTH}/password-recovery`)
+        .send({
+          email,
+        })
+        .expect(HttpStatus.NoContent);
     });
   });
 
@@ -209,6 +247,8 @@ describe('Auth API', () => {
     it.each`
       path                              | maxAttempts
       ${'login'}                        | ${5}
+      ${'new-password'}                 | ${5}
+      ${'password-recovery'}            | ${5}
       ${'registration'}                 | ${5}
       ${'registration-confirmation'}    | ${5}
       ${'registration-email-resending'} | ${5}

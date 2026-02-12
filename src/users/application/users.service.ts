@@ -3,6 +3,7 @@ import { UsersRepository } from '../repositories/users.repository';
 import { BcryptService } from '../../auth/application/bcrypt.service';
 import { UserEntity } from './user.entity';
 import { Result, ResultStatus } from '../../core/types/result-object';
+import { Recovery, User } from '../types/user';
 
 export class UsersService {
   constructor(
@@ -48,7 +49,43 @@ export class UsersService {
     };
   }
 
+  async updateBy(
+    filter: Partial<User>,
+    user: Partial<User>,
+  ): Promise<Result | Result<null, ResultStatus.BadRequest>> {
+    const isUpdated = await this.usersRepository.updateBy(filter, user);
+
+    return {
+      status: isUpdated ? ResultStatus.Success : ResultStatus.BadRequest,
+      extensions: [],
+      data: null,
+    };
+  }
+
+  async updateByRecoveryCode(
+    code: string,
+    passwordHash: string,
+  ): Promise<Result | Result<null, ResultStatus.BadRequest>> {
+    const isUpdated = await this.usersRepository.updateByRecoveryCode(code, {
+      passwordHash,
+      recovery: null,
+    });
+
+    return {
+      status: isUpdated ? ResultStatus.Success : ResultStatus.BadRequest,
+      extensions: [],
+      data: null,
+    };
+  }
+
   delete(id: string): Promise<void> {
     return this.usersRepository.delete(id);
+  }
+
+  generateRecovery(): Recovery {
+    return {
+      expirationDate: new Date(Date.now() + 3.6e6),
+      code: crypto.randomUUID(),
+    };
   }
 }

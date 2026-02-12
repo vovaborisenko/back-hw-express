@@ -43,6 +43,27 @@ export class UsersRepository {
     return updateResult.matchedCount === 1;
   }
 
+  async updateBy(filter: Partial<User>, user: Partial<User>): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(filter, { $set: user });
+
+    return updateResult.matchedCount === 1;
+  }
+
+  async updateByRecoveryCode(
+    code: string,
+    user: Partial<User>,
+  ): Promise<boolean> {
+    const updateResult = await userCollection.updateOne(
+      {
+        'recovery.code': code,
+        'recovery.expirationDate': { $gt: new Date() },
+      },
+      { $set: user },
+    );
+
+    return updateResult.matchedCount === 1;
+  }
+
   async delete(id: string): Promise<void> {
     const deleteResult = await userCollection.deleteOne({
       _id: new ObjectId(id),

@@ -1,3 +1,8 @@
+export interface Recovery {
+  expirationDate: Date;
+  code: string;
+}
+
 export interface User {
   login: string;
   email: string;
@@ -8,4 +13,5 @@ export interface User {
     confirmationCode: string;
     isConfirmed: boolean;
   };
+  recovery: Recovery | null;
 }

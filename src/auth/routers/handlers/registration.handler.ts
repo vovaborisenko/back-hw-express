@@ -9,7 +9,7 @@ import { AuthService } from '../../application/auth.service';
 export function createRegistrationHandler(
   authService: AuthService,
 ): RequestHandler<{}, ErrorMessages | undefined, RegistrationDto> {
-  return async function registrationHandler(req, res) {
+  return async function (req, res) {
     const result = await authService.registration(req.body);
 
     if (result.status !== ResultStatus.Success) {

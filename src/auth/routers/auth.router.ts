@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { loginDtoValidationMiddleware } from '../validation/login-dto-validation.middleware';
+import { passwordUpdateValidationMiddleware } from '../validation/password-update-validation.middleware';
+import { passwordRecoveryValidationMiddleware } from '../validation/password-recovery-validation.middleware';
 import { registrationConfirmationValidationMiddleware } from '../validation/registration-confirmation-validation.middleware';
 import { registrationEmailResendingValidationMiddleware } from '../validation/registration-email-resending-validation.middleware';
 import { userCreateDtoValidationMiddleware } from '../../users/validation/user-create-dto-validation.middleware';
@@ -21,6 +23,20 @@ authRouter
   )
   .post('/logout', refreshTokenGuard, authController.logout)
   .get('/me', accessTokenGuard, authController.me)
+  .post(
+    '/new-password',
+    getRateLimitMiddleware(),
+    passwordUpdateValidationMiddleware,
+    reqValidationResultMiddleware,
+    authController.passwordUpdate,
+  )
+  .post(
+    '/password-recovery',
+    getRateLimitMiddleware(),
+    passwordRecoveryValidationMiddleware,
+    reqValidationResultMiddleware,
+    authController.passwordRecovery,
+  )
   .post('/refresh-token', refreshTokenGuard, authController.refreshToken)
   .post(
     '/registration',

@@ -8,6 +8,8 @@ export class UserEntity implements User {
     confirmationCode: string;
     isConfirmed: boolean;
   };
+  public recovery = null;
+
   constructor(
     public login: string,
     public email: string,
