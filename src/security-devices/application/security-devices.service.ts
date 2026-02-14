@@ -7,9 +7,12 @@ import { parseJwtTime } from '../../core/utils/parseJwtTime';
 import { SecurityDeviceLogoutDto } from '../dto/security-device.logout-dto';
 import { SecurityDeviceDeleteAllDto } from '../dto/security-device.delete-all-dto';
 import { SecurityDeviceUpdateDto } from '../dto/security-device.update-dto';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class SecurityDevicesService {
   constructor(
+    @inject(SecurityDevicesRepository)
     private readonly securityDevicesRepository: SecurityDevicesRepository,
   ) {}
 

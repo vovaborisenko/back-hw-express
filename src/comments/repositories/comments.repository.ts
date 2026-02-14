@@ -2,7 +2,9 @@ import { ObjectId, WithId } from 'mongodb';
 import { Comment } from '../types/comment';
 import { commentCollection } from '../../db/mongo.db';
 import { CommentUpdateDto } from '../dto/comment.update-dto';
+import { injectable } from 'inversify';
 
+@injectable()
 export class CommentsRepository {
   async create(comment: Comment): Promise<string> {
     const insertResult = await commentCollection.insertOne(comment);

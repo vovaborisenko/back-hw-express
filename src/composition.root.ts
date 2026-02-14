@@ -10,6 +10,9 @@ import { PostsService } from './posts/application/posts.service';
 import { PostsQueryRepository } from './posts/repositories/posts.query-repository';
 import { PostsRepository } from './posts/repositories/posts.repository';
 import { BlogsRepository } from './blogs/repositories/blogs.repository';
+import { LogsRepository } from './logs/repositiories/logs.repository';
+import { LogsQueryRepository } from './logs/repositiories/logs.query-repository';
+import { LogsService } from './logs/application/logs.service';
 import { CommentsQueryRepository } from './comments/repositories/comments.query-repository';
 import { CommentsRepository } from './comments/repositories/comments.repository';
 import { CommentsService } from './comments/application/comments.service';
@@ -25,79 +28,41 @@ import { AuthService } from './auth/application/auth.service';
 import { JwtService } from './auth/application/jwt.service';
 import { AuthController } from './auth/routers/auth.controller';
 import { PasswordService } from './auth/application/password.service';
+import { Container } from 'inversify';
+import 'reflect-metadata';
 
-export const blogsRepository = new BlogsRepository();
-export const commentsRepository = new CommentsRepository();
-export const postsRepository = new PostsRepository();
-export const securityDevicesRepository = new SecurityDevicesRepository();
-export const usersRepository = new UsersRepository();
+export const container = new Container();
 
-export const blogsQueryRepository = new BlogsQueryRepository();
-export const commentsQueryRepository = new CommentsQueryRepository();
-export const postsQueryRepository = new PostsQueryRepository();
-export const securityDevicesQueryRepository =
-  new SecurityDevicesQueryRepository();
-export const usersQueryRepository = new UsersQueryRepository();
+container.bind(BlogsRepository).toSelf();
+container.bind(CommentsRepository).toSelf();
+container.bind(LogsRepository).toSelf();
+container.bind(PostsRepository).toSelf();
+container.bind(SecurityDevicesRepository).toSelf();
+container.bind(UsersRepository).toSelf();
 
-export const bcryptService = new BcryptService();
-export const blogsService = new BlogsService(blogsRepository);
-export const commentsService = new CommentsService(
-  commentsRepository,
-  postsRepository,
-  usersRepository,
-);
-export const emailService = new EmailService();
-export const emailManager = new EmailManager();
-export const jwtService = new JwtService();
-export const postsService = new PostsService(postsRepository, blogsRepository);
-export const securityDevicesService = new SecurityDevicesService(
-  securityDevicesRepository,
-);
-export const usersService = new UsersService(usersRepository, bcryptService);
-export const authService = new AuthService(
-  jwtService,
-  bcryptService,
-  emailService,
-  emailManager,
-  securityDevicesService,
-  usersService,
-  usersRepository,
-);
-export const passwordService = new PasswordService(
-  usersService,
-  bcryptService,
-  emailService,
-  emailManager,
-);
+container.bind(BlogsQueryRepository).toSelf();
+container.bind(CommentsQueryRepository).toSelf();
+container.bind(LogsQueryRepository).toSelf();
+container.bind(PostsQueryRepository).toSelf();
+container.bind(SecurityDevicesQueryRepository).toSelf();
+container.bind(UsersQueryRepository).toSelf();
 
-export const authController = new AuthController(
-  authService,
-  passwordService,
-  securityDevicesService,
-  usersQueryRepository,
-);
-export const blogController = new BlogsController(
-  blogsService,
-  blogsQueryRepository,
-  postsService,
-  postsQueryRepository,
-);
-export const commentsController = new CommentsController(
-  commentsService,
-  commentsQueryRepository,
-);
-export const postsController = new PostsController(
-  postsService,
-  postsQueryRepository,
-  commentsService,
-  commentsQueryRepository,
-  blogsQueryRepository,
-);
-export const securityDevicesController = new SecurityDevicesController(
-  securityDevicesService,
-  securityDevicesQueryRepository,
-);
-export const usersController = new UsersController(
-  usersService,
-  usersQueryRepository,
-);
+container.bind(BcryptService).toSelf();
+container.bind(BlogsService).toSelf();
+container.bind(CommentsService).toSelf();
+container.bind(EmailService).toSelf();
+container.bind(EmailManager).toSelf();
+container.bind(JwtService).toSelf();
+container.bind(LogsService).toSelf();
+container.bind(PostsService).toSelf();
+container.bind(SecurityDevicesService).toSelf();
+container.bind(UsersService).toSelf();
+container.bind(AuthService).toSelf();
+container.bind(PasswordService).toSelf();
+
+container.bind(AuthController).toSelf();
+container.bind(BlogsController).toSelf();
+container.bind(CommentsController).toSelf();
+container.bind(PostsController).toSelf();
+container.bind(SecurityDevicesController).toSelf();
+container.bind(UsersController).toSelf();

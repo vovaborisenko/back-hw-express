@@ -1,7 +1,9 @@
 import { Filter, ObjectId, WithId } from 'mongodb';
 import { SecurityDevice } from '../types/security-device';
 import { securityDeviceCollection } from '../../db/mongo.db';
+import { injectable } from 'inversify';
 
+@injectable()
 export class SecurityDevicesRepository {
   async create(securityDevice: SecurityDevice): Promise<string> {
     const insertedResult =

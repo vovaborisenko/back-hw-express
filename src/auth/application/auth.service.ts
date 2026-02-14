@@ -14,16 +14,19 @@ import { RegistrationDto } from '../dto/registration.dto';
 import { RefreshTokenUpdateDto } from '../dto/refresh-token.update-dto';
 import { RegistrationEmailResendingDto } from '../dto/registration-email-resending.dto';
 import { RegistrationConfirmationDto } from '../dto/registration-confirmation.dto';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class AuthService {
   constructor(
-    private readonly jwtService: JwtService,
-    private readonly bcryptService: BcryptService,
-    private readonly emailService: EmailService,
-    private readonly emailManager: EmailManager,
+    @inject(JwtService) private readonly jwtService: JwtService,
+    @inject(BcryptService) private readonly bcryptService: BcryptService,
+    @inject(EmailService) private readonly emailService: EmailService,
+    @inject(EmailManager) private readonly emailManager: EmailManager,
+    @inject(SecurityDevicesService)
     private readonly securityDevicesService: SecurityDevicesService,
-    private readonly usersService: UsersService,
-    private readonly usersRepository: UsersRepository,
+    @inject(UsersService) private readonly usersService: UsersService,
+    @inject(UsersRepository) private readonly usersRepository: UsersRepository,
   ) {}
 
   async login(

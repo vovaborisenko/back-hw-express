@@ -3,7 +3,9 @@ import { AggregatedPost } from '../types/post';
 import { BLOG_COLLECTION_NAME, postCollection } from '../../db/mongo.db';
 import { QueryPostList } from '../input/query-post-list';
 import { SortDirection } from '../../core/types/sort-direction';
+import { injectable } from 'inversify';
 
+@injectable()
 export class PostsQueryRepository {
   async findMany(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryPostList,

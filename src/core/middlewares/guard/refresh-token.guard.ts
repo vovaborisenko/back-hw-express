@@ -1,8 +1,13 @@
 import type { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../types/http-status';
-import { jwtService, securityDevicesService } from '../../../composition.root';
+import { container } from '../../../composition.root';
 import { ResultStatus } from '../../types/result-object';
 import { parseJwtTime } from '../../utils/parseJwtTime';
+import { JwtService } from '../../../auth/application/jwt.service';
+import { SecurityDevicesService } from '../../../security-devices/application/security-devices.service';
+
+const jwtService = container.get(JwtService);
+const securityDevicesService = container.get(SecurityDevicesService);
 
 export async function refreshTokenGuard(
   req: Request,

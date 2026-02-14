@@ -4,11 +4,13 @@ import { PostCreateDto } from '../dto/post.create-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { PostUpdateDto } from '../dto/post.update-dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class PostsService {
   constructor(
-    private readonly postsRepository: PostsRepository,
-    private readonly blogsRepository: BlogsRepository,
+    @inject(PostsRepository) private readonly postsRepository: PostsRepository,
+    @inject(BlogsRepository) private readonly blogsRepository: BlogsRepository,
   ) {}
 
   async create(dto: PostCreateDto): Promise<string> {

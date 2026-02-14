@@ -1,9 +1,13 @@
 import { BlogsRepository } from '../repositories/blogs.repository';
 import { BlogCreateDto } from '../dto/blog.create-dto';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class BlogsService {
-  constructor(private readonly blogsRepository: BlogsRepository) {}
+  constructor(
+    @inject(BlogsRepository) private readonly blogsRepository: BlogsRepository,
+  ) {}
 
   create(dto: BlogCreateDto): Promise<string> {
     const newBlog = {

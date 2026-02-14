@@ -1,8 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
-import { logsService } from '../../logs/application/logs.service';
-import { logsQueryRepository } from '../../logs/repositiories/logs.query-repository';
+import { LogsService } from '../../logs/application/logs.service';
+import { LogsQueryRepository } from '../../logs/repositiories/logs.query-repository';
 import { SETTINGS } from '../settings/settings';
 import { HttpStatus } from '../types/http-status';
+import { container } from '../../composition.root';
+
+const logsService = container.get(LogsService);
+const logsQueryRepository = container.get(LogsQueryRepository);
 
 export function getRateLimitMiddleware(
   maxAttempts = SETTINGS.RATE_LIMIT_MAX_ATTEMPTS,

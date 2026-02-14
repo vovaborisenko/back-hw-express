@@ -9,7 +9,10 @@ import { reqValidationResultMiddleware } from '../../core/middlewares/validation
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
 import { refreshTokenGuard } from '../../core/middlewares/guard/refresh-token.guard';
 import { getRateLimitMiddleware } from '../../core/middlewares/rate-limit.middleware';
-import { authController } from '../../composition.root';
+import { container } from '../../composition.root';
+import { AuthController } from './auth.controller';
+
+const authController = container.get(AuthController);
 
 export const authRouter = Router({});
 

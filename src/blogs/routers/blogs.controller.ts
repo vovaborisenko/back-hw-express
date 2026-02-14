@@ -9,7 +9,9 @@ import { createGetBlogHandler } from './handlers/get-blog.handler';
 import { createGetBlogPostListHandler } from './handlers/get-blog-post-list.handler';
 import { createGetBlogListHandler } from './handlers/get-blog-list.handler';
 import { createUpdateBlogHandler } from './handlers/update-blog.handler';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class BlogsController {
   readonly createItem;
   readonly createItemPost;
@@ -20,9 +22,11 @@ export class BlogsController {
   readonly updateItem;
 
   constructor(
-    private readonly blogsService: BlogsService,
+    @inject(BlogsService) private readonly blogsService: BlogsService,
+    @inject(BlogsQueryRepository)
     private readonly blogsQueryRepository: BlogsQueryRepository,
-    private readonly postsService: PostsService,
+    @inject(PostsService) private readonly postsService: PostsService,
+    @inject(PostsQueryRepository)
     private readonly postsQueryRepository: PostsQueryRepository,
   ) {
     this.createItem = createCreateBlogHandler(

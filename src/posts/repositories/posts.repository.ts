@@ -3,7 +3,9 @@ import { Post } from '../types/post';
 import { PostUpdateDto } from '../dto/post.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { postCollection } from '../../db/mongo.db';
+import { injectable } from 'inversify';
 
+@injectable()
 export class PostsRepository {
   findById(id: string): Promise<WithId<Post> | null> {
     return postCollection.findOne({ _id: new ObjectId(id) });

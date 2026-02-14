@@ -7,7 +7,10 @@ import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guar
 import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-admin-guard.middleware';
 import { queryPostListValidationMiddleware } from '../validation/query-post-list-validation.middleware';
 import { queryCommentListValidationMiddleware } from '../../comments/validation/query-comment-list-validation.middleware';
-import { postsController } from '../../composition.root';
+import { container } from '../../composition.root';
+import { PostsController } from './posts.controller';
+
+const postsController = container.get(PostsController);
 
 export const postsRouter = Router({});
 

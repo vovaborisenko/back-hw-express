@@ -4,13 +4,15 @@ import { EmailManager } from './email.manager';
 import { Result, ResultStatus } from '../../core/types/result-object';
 import { BcryptService } from './bcrypt.service';
 import { PasswordUpdateDto } from '../dto/password-update.dto';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class PasswordService {
   constructor(
-    private readonly usersService: UsersService,
-    private readonly bcryptService: BcryptService,
-    private readonly emailService: EmailService,
-    private readonly emailManager: EmailManager,
+    @inject(UsersService) private readonly usersService: UsersService,
+    @inject(BcryptService) private readonly bcryptService: BcryptService,
+    @inject(EmailService) private readonly emailService: EmailService,
+    @inject(EmailManager) private readonly emailManager: EmailManager,
   ) {}
 
   async changePasswordByRecoveryCode({

@@ -2,7 +2,9 @@ import { ObjectId, WithId } from 'mongodb';
 import { User } from '../types/user';
 import { userCollection } from '../../db/mongo.db';
 import { NotExistError } from '../../core/errors/not-exist.error';
+import { injectable } from 'inversify';
 
+@injectable()
 export class UsersRepository {
   findById(id: string): Promise<WithId<User> | null> {
     return userCollection.findOne({ _id: new ObjectId(id) });

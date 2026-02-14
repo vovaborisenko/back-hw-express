@@ -3,7 +3,9 @@ import { AggregatedComment, Comment } from '../types/comment';
 import { commentCollection, USER_COLLECTION_NAME } from '../../db/mongo.db';
 import { QueryCommentList } from '../input/query-comment-list';
 import { SortDirection } from '../../core/types/sort-direction';
+import { injectable } from 'inversify';
 
+@injectable()
 export class CommentsQueryRepository {
   async findMany(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryCommentList,

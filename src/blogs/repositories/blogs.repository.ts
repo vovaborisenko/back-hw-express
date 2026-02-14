@@ -3,7 +3,9 @@ import { Blog } from '../types/blog';
 import { BlogUpdateDto } from '../dto/blog.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
 import { blogCollection } from '../../db/mongo.db';
+import { injectable } from 'inversify';
 
+@injectable()
 export class BlogsRepository {
   findById(id: string): Promise<WithId<Blog> | null> {
     return blogCollection.findOne({ _id: new ObjectId(id) });

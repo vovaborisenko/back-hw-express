@@ -4,11 +4,13 @@ import { BcryptService } from '../../auth/application/bcrypt.service';
 import { UserEntity } from './user.entity';
 import { Result, ResultStatus } from '../../core/types/result-object';
 import { Recovery, User } from '../types/user';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class UsersService {
   constructor(
-    private readonly usersRepository: UsersRepository,
-    private readonly bcryptService: BcryptService,
+    @inject(UsersRepository) private readonly usersRepository: UsersRepository,
+    @inject(BcryptService) private readonly bcryptService: BcryptService,
   ) {}
 
   async create(

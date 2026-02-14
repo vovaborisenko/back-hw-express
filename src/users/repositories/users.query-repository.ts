@@ -2,7 +2,9 @@ import { Filter, ObjectId, WithId } from 'mongodb';
 import { User } from '../types/user';
 import { userCollection } from '../../db/mongo.db';
 import { QueryUserList } from '../input/query-user-list';
+import { injectable } from 'inversify';
 
+@injectable()
 export class UsersQueryRepository {
   async findMany({
     pageSize,

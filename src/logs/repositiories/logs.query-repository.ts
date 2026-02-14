@@ -1,6 +1,8 @@
 import { logCollection } from '../../db/mongo.db';
+import { injectable } from 'inversify';
 
-export const logsQueryRepository = {
+@injectable()
+export class LogsQueryRepository {
   countByIpUrlPeriod(ip: string, url: string, period: number): Promise<number> {
     const dateLimit = new Date(Date.now() - period);
 
@@ -9,5 +11,5 @@ export const logsQueryRepository = {
       url,
       date: { $gte: dateLimit },
     });
-  },
-};
+  }
+}

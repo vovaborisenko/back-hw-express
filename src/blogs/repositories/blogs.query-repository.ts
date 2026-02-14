@@ -2,7 +2,9 @@ import { ObjectId, WithId } from 'mongodb';
 import { Blog } from '../types/blog';
 import { blogCollection } from '../../db/mongo.db';
 import { QueryBlogList } from '../input/query-blog-list';
+import { injectable } from 'inversify';
 
+@injectable()
 export class BlogsQueryRepository {
   async findMany({
     pageSize,
