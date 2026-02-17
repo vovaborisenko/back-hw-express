@@ -1,9 +1,8 @@
-import { ObjectId } from 'mongodb';
 import { Types } from 'mongoose';
 
 export interface Comment {
   content: string;
-  postId: ObjectId;
+  postId: Types.ObjectId;
   userId: Types.ObjectId;
   createdAt: Date;
 }

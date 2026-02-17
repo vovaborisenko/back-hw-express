@@ -9,5 +9,5 @@ const blogSchema = new Schema<Blog>({
   createdAt: { type: Date, default: Date.now },
 });
 
-export const BlogModel = model<Blog>('blog', blogSchema);
+export const BlogModel = model<Blog>('Blog', blogSchema);
 export type BlogDocument = HydratedDocument<Blog>;

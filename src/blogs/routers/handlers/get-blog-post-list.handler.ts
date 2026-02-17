@@ -5,7 +5,6 @@ import { PostViewModel } from '../../../posts/types/post.view-model';
 import { QueryPostList } from '../../../posts/input/query-post-list';
 import { BlogsQueryRepository } from '../../repositories/blogs.query-repository';
 import { PostsQueryRepository } from '../../../posts/repositories/posts.query-repository';
-import { mapToPostViewModel } from '../../../posts/routers/mappers/map-to-post-view-model';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 
 export function createGetBlogPostListHandler(
@@ -23,18 +22,11 @@ export function createGetBlogPostListHandler(
       locations: ['query'],
       includeOptionals: true,
     });
-    const { items, totalCount } = await postsQueryRepository.findMany(
+    const paginatedPosts = await postsQueryRepository.findMany(
       queryParams,
       req.params.id,
     );
-    const postViewModels = items.map((post) => mapToPostViewModel(post));
 
-    res.json({
-      page: queryParams.pageNumber,
-      pageSize: queryParams.pageSize,
-      pagesCount: Math.ceil(totalCount / queryParams.pageSize),
-      totalCount,
-      items: postViewModels,
-    });
+    res.json(paginatedPosts);
   };
 }

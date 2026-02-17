@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { Filter, ObjectId, WithId } from 'mongodb';
 import { AggregatedComment, Comment } from '../types/comment';
 import { commentCollection, USER_COLLECTION_NAME } from '../../db/mongo.db';
@@ -24,7 +25,7 @@ export class CommentsQueryRepository {
     const filter: Filter<Comment> = {};
 
     if (postId) {
-      filter.postId = new ObjectId(postId);
+      filter.postId = new Types.ObjectId(postId);
     }
 
     const [items, totalCount] = await Promise.all([

@@ -3,7 +3,6 @@ import { ErrorMessages } from '../../../core/types/validation';
 import { MeViewModel } from '../../types/me.view-model';
 import { HttpStatus } from '../../../core/types/http-status';
 import { UsersQueryRepository } from '../../../users/repositories/users.query-repository';
-import { mapToMeViewModel } from '../mappers/map-to-me-view-model';
 
 export function createMeHandler(
   usersQueryRepository: UsersQueryRepository,

@@ -4,6 +4,7 @@ import { SecurityDeviceModel } from '../../security-devices/models/security-devi
 import { UserModel } from '../../users/models/user.model';
 import { LogModel } from '../../logs/models/log.model';
 import { BlogModel } from '../../blogs/models/blog.model';
+import { PostModel } from '../../posts/models/post.model';
 
 export const testingRouter = Router({});
 
@@ -14,7 +15,7 @@ testingRouter.delete('/all-data', async (req: Request, res: Response) => {
       // commentCollection,
       SecurityDeviceModel,
       LogModel,
-      // postCollection,
+      PostModel,
       UserModel,
     ].map((collection) => collection.deleteMany()),
   );
