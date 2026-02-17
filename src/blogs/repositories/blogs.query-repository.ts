@@ -1,8 +1,10 @@
-import { ObjectId, WithId } from 'mongodb';
 import { Blog } from '../types/blog';
-import { blogCollection } from '../../db/mongo.db';
 import { QueryBlogList } from '../input/query-blog-list';
 import { injectable } from 'inversify';
+import { BlogViewModel } from '../types/blog.view-model';
+import { QueryFilter, Types } from 'mongoose';
+import { BlogModel } from '../models/blog.model';
+import { Paginated } from '../../core/types/paginated';
 
 @injectable()
 export class BlogsQueryRepository {
@@ -12,32 +14,48 @@ export class BlogsQueryRepository {
     searchNameTerm,
     sortDirection,
     sortBy,
-  }: QueryBlogList): Promise<{ items: WithId<Blog>[]; totalCount: number }> {
+  }: QueryBlogList): Promise<Paginated<BlogViewModel[]>> {
     const skip = pageSize * (pageNumber - 1);
     const sort = {
       [sortBy]: sortDirection,
       _id: sortDirection,
     };
-    const filter: any = {};
+    const filter: QueryFilter<Blog> = {};
 
     if (searchNameTerm) {
       filter.name = { $regex: searchNameTerm, $options: 'i' };
     }
 
     const [items, totalCount] = await Promise.all([
-      blogCollection
-        .find(filter)
-        .sort(sort)
-        .skip(skip)
-        .limit(pageSize)
-        .toArray(),
-      blogCollection.countDocuments(filter),
+      BlogModel.find(filter).sort(sort).skip(skip).limit(pageSize).lean(),
+      BlogModel.countDocuments(filter),
     ]);
 
-    return { items, totalCount };
+    return {
+      page: pageNumber,
+      pageSize,
+      pagesCount: Math.ceil(totalCount / pageSize),
+      totalCount,
+      items: items.map(this.mapToBlogViewModel),
+    };
   }
 
-  findById(id: string): Promise<WithId<Blog> | null> {
-    return blogCollection.findOne({ _id: new ObjectId(id) });
+  async findById(id: string | Types.ObjectId): Promise<BlogViewModel | null> {
+    const blogDocument = await BlogModel.findById(id);
+
+    return blogDocument ? this.mapToBlogViewModel(blogDocument) : null;
+  }
+
+  private mapToBlogViewModel(
+    blog: Blog & { _id: Types.ObjectId },
+  ): BlogViewModel {
+    return {
+      id: blog._id.toString(),
+      name: blog.name,
+      description: blog.description,
+      websiteUrl: blog.websiteUrl,
+      isMembership: blog.isMembership,
+      createdAt: blog.createdAt.toISOString(),
+    };
   }
 }

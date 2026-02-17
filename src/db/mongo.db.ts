@@ -24,26 +24,11 @@ export let postCollection: Collection<Post>;
 export let userCollection: Collection<User>;
 
 export async function runDB(url: string): Promise<void> {
-  // client = new MongoClient(url);
-  // const db: Db = client.db(SETTINGS.DB_NAME);
-  //
-  // //Инициализация коллекций
-  // blogCollection = db.collection<Blog>(BLOG_COLLECTION_NAME);
-  // commentCollection = db.collection<Comment>(COMMENTS_COLLECTION_NAME);
-  // securityDeviceCollection = db.collection<SecurityDevice>(
-  //   SECURITY_DEVICE_COLLECTION_NAME,
-  // );
-  // logCollection = db.collection<Log>(LOG_COLLECTION_NAME);
-  // postCollection = db.collection<Post>(POST_COLLECTION_NAME);
-  // userCollection = db.collection<User>(USER_COLLECTION_NAME);
-
   try {
-    console.log(`Running DB ${url}`);
     await mongoose.connect(url, { dbName: SETTINGS.DB_NAME });
     console.log('✅ Connected to the database');
   } catch (e) {
     await mongoose.disconnect();
-    // await client.close();
     throw new Error(`❌ Database not connected: ${e}`);
   }
 }

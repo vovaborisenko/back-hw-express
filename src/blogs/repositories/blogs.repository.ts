@@ -1,45 +1,21 @@
-import { ObjectId, WithId } from 'mongodb';
-import { Blog } from '../types/blog';
-import { BlogUpdateDto } from '../dto/blog.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
-import { blogCollection } from '../../db/mongo.db';
 import { injectable } from 'inversify';
+import { BlogDocument, BlogModel } from '../models/blog.model';
 
 @injectable()
 export class BlogsRepository {
-  findById(id: string): Promise<WithId<Blog> | null> {
-    return blogCollection.findOne({ _id: new ObjectId(id) });
+  findById(id: string): Promise<BlogDocument | null> {
+    return BlogModel.findById(id);
   }
 
-  async create(blog: Blog): Promise<string> {
-    const insertResult = await blogCollection.insertOne(blog);
-
-    return insertResult.insertedId.toString();
-  }
-
-  async update(id: string, dto: BlogUpdateDto): Promise<void> {
-    const updateResult = await blogCollection.updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $set: {
-          name: dto.name,
-          description: dto.description,
-          websiteUrl: dto.websiteUrl,
-        },
-      },
-    );
-
-    if (updateResult.matchedCount < 1) {
-      throw new NotExistError('Blog');
-    }
+  async save(blogDocument: BlogDocument): Promise<void> {
+    await blogDocument.save();
   }
 
   async delete(id: string): Promise<void> {
-    const deleteResult = await blogCollection.deleteOne({
-      _id: new ObjectId(id),
-    });
+    const deleteResult = await BlogModel.findByIdAndDelete(id);
 
-    if (deleteResult.deletedCount < 1) {
+    if (!deleteResult) {
       throw new NotExistError('Blog');
     }
   }
