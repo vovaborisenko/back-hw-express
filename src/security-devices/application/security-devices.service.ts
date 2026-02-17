@@ -2,12 +2,13 @@ import { Result, ResultStatus } from '../../core/types/result-object';
 import { SecurityDevicesRepository } from '../repositories/security-devices.repository';
 import { SecurityDeviceCreateDto } from '../dto/security-device.create-dto';
 import { SecurityDeviceCheckDto } from '../dto/security-device.check-dto';
-import { ObjectId } from 'mongodb';
 import { parseJwtTime } from '../../core/utils/parseJwtTime';
 import { SecurityDeviceLogoutDto } from '../dto/security-device.logout-dto';
 import { SecurityDeviceDeleteAllDto } from '../dto/security-device.delete-all-dto';
 import { SecurityDeviceUpdateDto } from '../dto/security-device.update-dto';
 import { inject, injectable } from 'inversify';
+import { Types } from 'mongoose';
+import { SecurityDeviceModel } from '../models/security-device.model';
 
 @injectable()
 export class SecurityDevicesService {
@@ -21,49 +22,52 @@ export class SecurityDevicesService {
     refreshToken,
     useragent,
   }: SecurityDeviceCreateDto): Promise<
-    Result<string> | Result<null, ResultStatus.BadRequest>
+    Result<Types.ObjectId> | Result<null, ResultStatus.BadRequest>
   > {
     const deviceName = useragent
       ? `${useragent.browser} ${useragent.version}`
       : 'unknown';
 
-    const securityDevice = {
-      deviceId: refreshToken.deviceId,
-      deviceName,
-      expiredAt: parseJwtTime(refreshToken.exp),
-      ip,
-      issuedAt: parseJwtTime(refreshToken.iat),
-      userId: new ObjectId(refreshToken.userId),
-    };
+    const securityDeviceDocument = new SecurityDeviceModel();
 
-    const id = await this.securityDevicesRepository.create(securityDevice);
+    securityDeviceDocument.deviceId = refreshToken.deviceId;
+    securityDeviceDocument.deviceName = deviceName;
+    securityDeviceDocument.expiredAt = parseJwtTime(refreshToken.exp);
+    securityDeviceDocument.ip = ip;
+    securityDeviceDocument.issuedAt = parseJwtTime(refreshToken.iat);
+    securityDeviceDocument.userId = new Types.ObjectId(refreshToken.userId);
+
+    await this.securityDevicesRepository.save(securityDeviceDocument);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: id,
+      data: securityDeviceDocument._id,
     };
   }
   async update(
     filter: { deviceId: string; issuedAt: Date },
     { refreshToken }: SecurityDeviceUpdateDto,
-  ): Promise<
-    Result<string | undefined> | Result<null, ResultStatus.BadRequest>
-  > {
-    const securityDevice = {
-      expiredAt: parseJwtTime(refreshToken.exp),
-      issuedAt: parseJwtTime(refreshToken.iat),
-    };
+  ): Promise<Result<Types.ObjectId> | Result<null, ResultStatus.NotFound>> {
+    const securityDeviceDocument = await SecurityDeviceModel.findOne(filter);
 
-    const id = await this.securityDevicesRepository.update(
-      filter,
-      securityDevice,
-    );
+    if (!securityDeviceDocument) {
+      return {
+        status: ResultStatus.NotFound,
+        extensions: [],
+        data: null,
+      };
+    }
+
+    securityDeviceDocument.expiredAt = parseJwtTime(refreshToken.exp);
+    securityDeviceDocument.issuedAt = parseJwtTime(refreshToken.iat);
+
+    await this.securityDevicesRepository.save(securityDeviceDocument);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: id,
+      data: securityDeviceDocument._id,
     };
   }
   async check({
@@ -72,12 +76,12 @@ export class SecurityDevicesService {
   }: SecurityDeviceCheckDto): Promise<
     Result | Result<null, ResultStatus.Unauthorised>
   > {
-    const securityDevice = await this.securityDevicesRepository.findBy({
+    const securityDeviceDocument = await this.securityDevicesRepository.findBy({
       issuedAt: parseJwtTime(iat),
       deviceId,
     });
 
-    if (!securityDevice) {
+    if (!securityDeviceDocument) {
       return {
         status: ResultStatus.Unauthorised,
         extensions: [],

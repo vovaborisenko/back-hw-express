@@ -1,12 +1,10 @@
 import { Result, ResultStatus } from '../../core/types/result-object';
 import { AgentDetails } from 'express-useragent';
-import { WithId } from 'mongodb';
-import { User } from '../../users/types/user';
 import { BcryptService } from './bcrypt.service';
 import { JwtService } from './jwt.service';
 import { EmailService } from './email.service';
 import { EmailManager } from './email.manager';
-import { UserEntity } from '../../users/application/user.entity';
+import { UserDocument } from '../../users/models/user.model';
 import { SecurityDevicesService } from '../../security-devices/application/security-devices.service';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import { UsersService } from '../../users/application/users.service';
@@ -73,7 +71,7 @@ export class AuthService {
     loginOrEmail: string,
     password: string,
   ): Promise<
-    | Result<WithId<User>>
+    | Result<UserDocument>
     | Result<null, ResultStatus.NotFound | ResultStatus.BadRequest>
   > {
     const user = await this.usersRepository.findByLoginOrEmail(loginOrEmail);
@@ -140,9 +138,9 @@ export class AuthService {
       ResultStatus.Success | ResultStatus.BadRequest | ResultStatus.ServerError
     >
   > {
-    const user = await this.usersRepository.findByEmail(dto.email);
+    const userDocument = await this.usersRepository.findByEmail(dto.email);
 
-    if (!user || user?.emailConfirmation.isConfirmed) {
+    if (!userDocument || userDocument.emailConfirmation.isConfirmed) {
       return {
         status: ResultStatus.BadRequest,
         extensions: [{ field: 'email', message: 'email is already confirmed' }],
@@ -150,31 +148,20 @@ export class AuthService {
       };
     }
 
-    if (user) {
-      const newEmailConfirmation = UserEntity.generateEmailConfirmationData();
-      const isUpdated = await this.usersRepository.update(user._id.toString(), {
-        emailConfirmation: newEmailConfirmation,
-      });
+    userDocument.emailConfirmation =
+      this.usersService.generateEmailConfirmationData();
 
-      if (!isUpdated) {
-        return {
-          status: ResultStatus.ServerError,
-          errorMessage: "Can't update user",
-          extensions: [],
-          data: null,
-        };
-      }
+    this.emailService
+      .sendEmail(
+        dto.email,
+        this.emailManager.emailConfirmation(
+          userDocument.emailConfirmation.confirmationCode,
+        ),
+        'Confirm email',
+      )
+      .catch((error) => console.warn(error));
 
-      this.emailService
-        .sendEmail(
-          dto.email,
-          this.emailManager.emailConfirmation(
-            newEmailConfirmation.confirmationCode,
-          ),
-          'Confirm email',
-        )
-        .catch((error) => console.warn(error));
-    }
+    await this.usersRepository.save(userDocument);
 
     return {
       status: ResultStatus.Success,
@@ -191,14 +178,14 @@ export class AuthService {
       ResultStatus.Success | ResultStatus.BadRequest | ResultStatus.ServerError
     >
   > {
-    const user = await this.usersRepository.findByEmailConfirmationCode(
+    const userDocument = await this.usersRepository.findByEmailConfirmationCode(
       dto.code,
     );
 
     if (
-      !user ||
-      user.emailConfirmation.isConfirmed ||
-      user.emailConfirmation.expirationDate.valueOf() < Date.now()
+      !userDocument ||
+      userDocument.emailConfirmation.isConfirmed ||
+      userDocument.emailConfirmation.expirationDate.valueOf() < Date.now()
     ) {
       return {
         status: ResultStatus.BadRequest,
@@ -207,21 +194,9 @@ export class AuthService {
       };
     }
 
-    const isUpdated = await this.usersRepository.update(user._id.toString(), {
-      emailConfirmation: {
-        ...user.emailConfirmation,
-        isConfirmed: true,
-      },
-    });
+    userDocument.emailConfirmation.isConfirmed = true;
 
-    if (!isUpdated) {
-      return {
-        status: ResultStatus.ServerError,
-        errorMessage: "Can't update user",
-        extensions: [],
-        data: null,
-      };
-    }
+    await this.usersRepository.save(userDocument);
 
     return {
       status: ResultStatus.Success,
@@ -229,6 +204,7 @@ export class AuthService {
       data: null,
     };
   }
+
   async regenerateTokens({
     deviceId,
     userId,

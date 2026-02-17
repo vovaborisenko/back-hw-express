@@ -7,11 +7,7 @@ import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
 import { validAuth } from '../constants/common';
-import {
-  createUser,
-  createUserAndLogin,
-  userDto,
-} from '../utils/user/user.util';
+import { createUser, createUserAndLogin } from '../utils/user/user.util';
 import { extractCookies } from '../utils/cookies/cookies';
 import { wait } from '../utils/core/wait';
 

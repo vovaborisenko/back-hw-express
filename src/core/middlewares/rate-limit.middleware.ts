@@ -29,7 +29,6 @@ export function getRateLimitMiddleware(
     await logsService.create({
       ip,
       url,
-      date: new Date(),
     });
 
     next();

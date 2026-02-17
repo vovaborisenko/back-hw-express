@@ -1,21 +1,30 @@
-import { Filter, ObjectId, WithId } from 'mongodb';
+import { WithId } from 'mongodb';
 import { SecurityDevice } from '../types/security-device';
-import { securityDeviceCollection } from '../../db/mongo.db';
 import { injectable } from 'inversify';
+import {
+  SecurityDeviceDocument,
+  SecurityDeviceModel,
+} from '../models/security-device.model';
+import { QueryFilter, Types } from 'mongoose';
 
 @injectable()
 export class SecurityDevicesRepository {
-  async create(securityDevice: SecurityDevice): Promise<string> {
-    const insertedResult =
-      await securityDeviceCollection.insertOne(securityDevice);
-
-    return insertedResult.insertedId.toString();
+  async save(document: SecurityDeviceDocument): Promise<void> {
+    await document.save();
   }
+
+  async create(securityDevice: SecurityDevice): Promise<string> {
+    const deviceModel = new SecurityDeviceModel(securityDevice);
+    const result = await deviceModel.save();
+
+    return result.id;
+  }
+
   async update(
     filter: Partial<SecurityDevice>,
     securityDevice: Partial<SecurityDevice>,
   ): Promise<string | undefined> {
-    const result = await securityDeviceCollection.updateOne(filter, {
+    const result = await SecurityDeviceModel.updateOne(filter, {
       $set: securityDevice,
     });
 
@@ -27,13 +36,13 @@ export class SecurityDevicesRepository {
   ): Promise<boolean> {
     const { userId, ...rest } = device;
 
-    const filter: Filter<SecurityDevice> = rest;
+    const filter: QueryFilter<SecurityDevice> = rest;
 
     if (userId !== undefined) {
-      filter.userId = new ObjectId(userId);
+      filter.userId = new Types.ObjectId(userId);
     }
 
-    const deletedResult = await securityDeviceCollection.deleteOne(filter);
+    const deletedResult = await SecurityDeviceModel.deleteOne(filter);
 
     return deletedResult.deletedCount > 0;
   }
@@ -45,31 +54,29 @@ export class SecurityDevicesRepository {
     deviceId: string;
     userId: string;
   }): Promise<boolean> {
-    const deletedResult = await securityDeviceCollection.deleteMany({
-      userId: new ObjectId(userId),
+    const deletedResult = await SecurityDeviceModel.deleteMany({
+      userId: new Types.ObjectId(userId),
       deviceId: { $ne: deviceId },
     });
 
     return deletedResult.deletedCount > 0;
   }
 
-  findById(id: string): Promise<WithId<SecurityDevice> | null> {
-    return securityDeviceCollection.findOne({
-      _id: new ObjectId(id),
-    });
+  findById(id: string): Promise<SecurityDeviceDocument | null> {
+    return SecurityDeviceModel.findById(id);
   }
 
   findBy(
     device: Partial<Omit<SecurityDevice, 'userId'> & { userId: string }>,
-  ): Promise<WithId<SecurityDevice> | null> {
+  ): Promise<SecurityDeviceDocument | null> {
     const { userId, ...rest } = device;
 
-    const filter: Filter<SecurityDevice> = rest;
+    const filter: QueryFilter<SecurityDevice> = rest;
 
     if (userId !== undefined) {
-      filter.userId = new ObjectId(userId);
+      filter.userId = new Types.ObjectId(userId);
     }
 
-    return securityDeviceCollection.findOne(filter);
+    return SecurityDeviceModel.findOne(filter);
   }
 }

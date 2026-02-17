@@ -1,9 +1,10 @@
 import { ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
 
 export interface Comment {
   content: string;
   postId: ObjectId;
-  userId: ObjectId;
+  userId: Types.ObjectId;
   createdAt: Date;
 }
 

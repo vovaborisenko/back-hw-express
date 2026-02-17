@@ -17,7 +17,7 @@ export function createMeHandler(
       return;
     }
 
-    const user = await usersQueryRepository.findById(userId);
+    const user = await usersQueryRepository.findMeById(userId);
 
     if (!user) {
       res.sendStatus(HttpStatus.Unauthorized);
@@ -25,6 +25,6 @@ export function createMeHandler(
       return;
     }
 
-    res.status(HttpStatus.Ok).send(mapToMeViewModel(user));
+    res.status(HttpStatus.Ok).send(user);
   };
 }

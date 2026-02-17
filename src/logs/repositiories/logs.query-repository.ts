@@ -1,15 +1,21 @@
-import { logCollection } from '../../db/mongo.db';
 import { injectable } from 'inversify';
+import { LogModel } from '../models/log.model';
 
 @injectable()
 export class LogsQueryRepository {
-  countByIpUrlPeriod(ip: string, url: string, period: number): Promise<number> {
+  async countByIpUrlPeriod(
+    ip: string,
+    url: string,
+    period: number,
+  ): Promise<number> {
     const dateLimit = new Date(Date.now() - period);
 
-    return logCollection.countDocuments({
+    const count = await LogModel.countDocuments({
       ip,
       url,
-      date: { $gte: dateLimit },
-    });
+      createdAt: { $gte: dateLimit },
+    }).exec();
+
+    return count;
   }
 }

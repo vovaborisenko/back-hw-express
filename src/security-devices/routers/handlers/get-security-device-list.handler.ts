@@ -19,6 +19,6 @@ export function createGetSecurityDeviceListHandler(
     const items =
       await securityDevicesQueryRepository.findActiveByUserId(userId);
 
-    res.json(items.map(mapToSecurityDeviceViewModel));
+    res.json(items);
   };
 }

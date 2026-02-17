@@ -1,10 +1,10 @@
 import { UserCreateDto } from '../dto/user.create-dto';
 import { UsersRepository } from '../repositories/users.repository';
 import { BcryptService } from '../../auth/application/bcrypt.service';
-import { UserEntity } from './user.entity';
 import { Result, ResultStatus } from '../../core/types/result-object';
-import { Recovery, User } from '../types/user';
+import { EmailConfirmation, Recovery, User } from '../types/user';
 import { inject, injectable } from 'inversify';
+import { UserDocument, UserModel } from '../models/user.model';
 
 @injectable()
 export class UsersService {
@@ -16,8 +16,7 @@ export class UsersService {
   async create(
     dto: UserCreateDto,
   ): Promise<
-    | Result<{ id: string; user: UserEntity }>
-    | Result<null, ResultStatus.BadRequest>
+    Result<{ user: UserDocument }> | Result<null, ResultStatus.BadRequest>
   > {
     const userByLogin = await this.usersRepository.findByLogin(dto.login);
 
@@ -41,13 +40,18 @@ export class UsersService {
 
     const passwordHash = await this.bcryptService.createHash(dto.password);
 
-    const newUser = new UserEntity(dto.login, dto.email, passwordHash);
-    const createdId = await this.usersRepository.create(newUser);
+    const newUser = new UserModel();
+
+    newUser.login = dto.login;
+    newUser.email = dto.email;
+    newUser.passwordHash = passwordHash;
+
+    await this.usersRepository.save(newUser);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: { id: createdId, user: newUser },
+      data: { user: newUser },
     };
   }
 
@@ -55,10 +59,22 @@ export class UsersService {
     filter: Partial<User>,
     user: Partial<User>,
   ): Promise<Result | Result<null, ResultStatus.BadRequest>> {
-    const isUpdated = await this.usersRepository.updateBy(filter, user);
+    const userDocument = await this.usersRepository.findBy(filter);
+
+    if (!userDocument) {
+      return {
+        status: ResultStatus.BadRequest,
+        extensions: [],
+        data: null,
+      };
+    }
+
+    Object.assign(userDocument, user);
+
+    await this.usersRepository.save(userDocument);
 
     return {
-      status: isUpdated ? ResultStatus.Success : ResultStatus.BadRequest,
+      status: ResultStatus.Success,
       extensions: [],
       data: null,
     };
@@ -68,13 +84,22 @@ export class UsersService {
     code: string,
     passwordHash: string,
   ): Promise<Result | Result<null, ResultStatus.BadRequest>> {
-    const isUpdated = await this.usersRepository.updateByRecoveryCode(code, {
-      passwordHash,
-      recovery: null,
-    });
+    const userDocument = await this.usersRepository.findByRecoveryCode(code);
+    if (!userDocument) {
+      return {
+        status: ResultStatus.BadRequest,
+        extensions: [],
+        data: null,
+      };
+    }
+
+    userDocument.recovery = null;
+    userDocument.passwordHash = passwordHash;
+
+    await this.usersRepository.save(userDocument);
 
     return {
-      status: isUpdated ? ResultStatus.Success : ResultStatus.BadRequest,
+      status: ResultStatus.Success,
       extensions: [],
       data: null,
     };
@@ -82,6 +107,14 @@ export class UsersService {
 
   delete(id: string): Promise<void> {
     return this.usersRepository.delete(id);
+  }
+
+  generateEmailConfirmationData(): EmailConfirmation {
+    return {
+      expirationDate: new Date(Date.now() + 3.6e6),
+      confirmationCode: crypto.randomUUID(),
+      isConfirmed: false,
+    };
   }
 
   generateRecovery(): Recovery {

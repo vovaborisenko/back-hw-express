@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { Types } from 'mongoose';
 
 export interface SecurityDevice {
   deviceId: string;
@@ -6,5 +6,5 @@ export interface SecurityDevice {
   expiredAt: Date;
   ip: string;
   issuedAt: Date;
-  userId: ObjectId;
+  userId: Types.ObjectId;
 }
