@@ -8,14 +8,12 @@ export class LogsQueryRepository {
     url: string,
     period: number,
   ): Promise<number> {
-    const dateLimit = new Date(Date.now() - period);
+    const dateLimit = Date.now() - period;
 
-    const count = await LogModel.countDocuments({
+    return LogModel.countDocuments({
       ip,
       url,
       createdAt: { $gte: dateLimit },
-    }).exec();
-
-    return count;
+    });
   }
 }

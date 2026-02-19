@@ -36,19 +36,17 @@ export class BlogsQueryRepository {
       pageSize,
       pagesCount: Math.ceil(totalCount / pageSize),
       totalCount,
-      items: items.map(this.mapToBlogViewModel),
+      items: items.map(this.toViewModel),
     };
   }
 
   async findById(id: string | Types.ObjectId): Promise<BlogViewModel | null> {
     const blogDocument = await BlogModel.findById(id);
 
-    return blogDocument ? this.mapToBlogViewModel(blogDocument) : null;
+    return blogDocument ? this.toViewModel(blogDocument) : null;
   }
 
-  private mapToBlogViewModel(
-    blog: Blog & { _id: Types.ObjectId },
-  ): BlogViewModel {
+  private toViewModel(blog: Blog & { _id: Types.ObjectId }): BlogViewModel {
     return {
       id: blog._id.toString(),
       name: blog.name,

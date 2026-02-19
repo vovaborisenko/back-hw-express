@@ -232,14 +232,6 @@ describe('Auth API', () => {
   });
 
   describe(`Too many attempts`, () => {
-    beforeAll(() => {
-      jest.useFakeTimers({ advanceTimers: true });
-    });
-
-    afterAll(() => {
-      jest.useRealTimers();
-    });
-
     it.each`
       path                              | maxAttempts
       ${'login'}                        | ${5}
@@ -254,7 +246,7 @@ describe('Auth API', () => {
         await runTest();
 
         // after 10sec has more attempts
-        jest.setSystemTime(Date.now() + 1e4);
+        await wait(SETTINGS.RATE_LIMIT_PERIOD);
         await runTest();
 
         async function runTest() {
@@ -270,6 +262,7 @@ describe('Auth API', () => {
           }
         }
       },
+      SETTINGS.RATE_LIMIT_PERIOD + 5000, // Таймаут = период ожидания + запас
     );
   });
 });

@@ -12,12 +12,10 @@ export class SecurityDevicesQueryRepository {
       expiredAt: { $gte: new Date() },
     }).lean();
 
-    return items.map(this.mapToSecurityDeviceViewModel);
+    return items.map(this.toViewModel);
   }
 
-  mapToSecurityDeviceViewModel(
-    device: SecurityDevice,
-  ): SecurityDeviceViewModel {
+  private toViewModel(device: SecurityDevice): SecurityDeviceViewModel {
     return {
       deviceId: device.deviceId,
       ip: device.ip,
