@@ -25,6 +25,7 @@ export function createGetPostCommentListHandler(
     const paginatedComments = await commentsQueryRepository.findMany(
       queryParams,
       req.params.id,
+      req.user?.id,
     );
 
     res.json(paginatedComments);

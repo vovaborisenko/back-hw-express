@@ -49,7 +49,9 @@ export class CommentsQueryRepository {
       author: authorId,
       parent: { $in: items.map(({ _id }) => _id) },
     }).lean();
-    const userLikesMap = new Map(userLikes.map((like) => [like._id, like]));
+    const userLikesMap = new Map(
+      userLikes.map((like) => [like.parent.toString(), like]),
+    );
 
     return {
       page: pageNumber,
@@ -57,7 +59,10 @@ export class CommentsQueryRepository {
       pagesCount: Math.ceil(totalCount / pageSize),
       totalCount,
       items: items.map((comment) =>
-        this.toViewModel({ comment, userLike: userLikesMap.get(comment._id) }),
+        this.toViewModel({
+          comment,
+          userLike: userLikesMap.get(comment._id.toString()),
+        }),
       ),
     };
   }

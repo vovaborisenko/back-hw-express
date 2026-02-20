@@ -9,6 +9,7 @@ import { queryPostListValidationMiddleware } from '../validation/query-post-list
 import { queryCommentListValidationMiddleware } from '../../comments/validation/query-comment-list-validation.middleware';
 import { container } from '../../composition.root';
 import { PostsController } from './posts.controller';
+import { optionalUserMiddleware } from '../../core/middlewares/optional-user.middleware';
 
 const postsController = container.get(PostsController);
 
@@ -59,6 +60,7 @@ postsRouter
     paramIdValidationMiddleware(),
     queryCommentListValidationMiddleware,
     reqValidationResultMiddleware,
+    optionalUserMiddleware,
     postsController.getItemComments,
   )
 
