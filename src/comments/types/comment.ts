@@ -13,4 +13,6 @@ export type PopulatingUser = Pick<UserDocument, '_id' | 'login'>;
 export interface PopulatedComment extends Omit<Comment, 'user'> {
   _id: Types.ObjectId;
   user: PopulatingUser;
+  likesCount: number;
+  dislikesCount: number;
 }

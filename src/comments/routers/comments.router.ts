@@ -5,6 +5,8 @@ import { commentUpdateDtoValidationMiddleware } from '../validation/comment-upda
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
 import { container } from '../../composition.root';
 import { CommentsController } from './comments.controller';
+import { commentLikeStatusUpdateDtoValidationMiddleware } from '../validation/comment-like-status-update-dto-validation.middleware';
+import { optionalUserMiddleware } from '../../core/middlewares/optional-user.middleware';
 
 const commentsController = container.get(CommentsController);
 
@@ -15,6 +17,7 @@ commentsRouter
     '/:id',
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
+    optionalUserMiddleware,
     commentsController.getItem,
   )
 
@@ -25,6 +28,15 @@ commentsRouter
     commentUpdateDtoValidationMiddleware,
     reqValidationResultMiddleware,
     commentsController.updateItem,
+  )
+
+  .put(
+    '/:id/like-status',
+    accessTokenGuard,
+    paramIdValidationMiddleware(),
+    commentLikeStatusUpdateDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    commentsController.updateItemLikeStatus,
   )
 
   .delete(

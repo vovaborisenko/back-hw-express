@@ -28,6 +28,8 @@ import { AuthService } from './auth/application/auth.service';
 import { JwtService } from './auth/application/jwt.service';
 import { AuthController } from './auth/routers/auth.controller';
 import { PasswordService } from './auth/application/password.service';
+import { LikeRepository } from './likes/repositiories/like.repository';
+import { LikeService } from './likes/application/like.service';
 import { Container } from 'inversify';
 import 'reflect-metadata';
 
@@ -35,6 +37,7 @@ export const container = new Container();
 
 container.bind(BlogsRepository).toSelf();
 container.bind(CommentsRepository).toSelf();
+container.bind(LikeRepository).toSelf();
 container.bind(LogsRepository).toSelf();
 container.bind(PostsRepository).toSelf();
 container.bind(SecurityDevicesRepository).toSelf();
@@ -53,6 +56,7 @@ container.bind(CommentsService).toSelf();
 container.bind(EmailService).toSelf();
 container.bind(EmailManager).toSelf();
 container.bind(JwtService).toSelf();
+container.bind(LikeService).toSelf();
 container.bind(LogsService).toSelf();
 container.bind(PostsService).toSelf();
 container.bind(SecurityDevicesService).toSelf();

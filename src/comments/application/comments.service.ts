@@ -7,12 +7,15 @@ import { Result, ResultStatus } from '../../core/types/result-object';
 import { inject, injectable } from 'inversify';
 import { CommentModel } from '../models/comment.model';
 import { Types } from 'mongoose';
+import { CommentLikeStatusUpdateDto } from '../dto/comment-like-status.update-dto';
+import { LikeService } from '../../likes/application/like.service';
 
 @injectable()
 export class CommentsService {
   constructor(
     @inject(CommentsRepository)
     private readonly commentsRepository: CommentsRepository,
+    @inject(LikeService) private readonly likesService: LikeService,
     @inject(PostsRepository) private readonly postsRepository: PostsRepository,
     @inject(UsersRepository) private readonly usersRepository: UsersRepository,
   ) {}
@@ -94,6 +97,28 @@ export class CommentsService {
       extensions: [],
       data: null,
     };
+  }
+
+  async updateLikeStatus(
+    id: string,
+    userId: string,
+    dto: CommentLikeStatusUpdateDto,
+  ): Promise<Result<Types.ObjectId> | Result<null, ResultStatus.NotFound>> {
+    const comment = await this.commentsRepository.findById(id);
+
+    if (!comment) {
+      return {
+        status: ResultStatus.NotFound,
+        extensions: [],
+        data: null,
+      };
+    }
+
+    return this.likesService.updateOrCreate({
+      status: dto.likeStatus,
+      authorId: new Types.ObjectId(userId),
+      parentId: comment._id,
+    });
   }
 
   async delete(
