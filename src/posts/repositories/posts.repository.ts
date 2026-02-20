@@ -1,44 +1,21 @@
-import { ObjectId, WithId } from 'mongodb';
-import { Post } from '../types/post';
-import { PostUpdateDto } from '../dto/post.update-dto';
 import { NotExistError } from '../../core/errors/not-exist.error';
-import { postCollection } from '../../db/mongo.db';
+import { injectable } from 'inversify';
+import { PostDocument, PostModel } from '../models/post.model';
 
+@injectable()
 export class PostsRepository {
-  findById(id: string): Promise<WithId<Post> | null> {
-    return postCollection.findOne({ _id: new ObjectId(id) });
+  findById(id: string): Promise<PostDocument | null> {
+    return PostModel.findById(id);
   }
 
-  async create(post: Post): Promise<string> {
-    const insertResult = await postCollection.insertOne(post);
-
-    return insertResult.insertedId.toString();
-  }
-
-  async update(id: string, dto: PostUpdateDto): Promise<void> {
-    const updateResult = await postCollection.updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $set: {
-          title: dto.title,
-          shortDescription: dto.shortDescription,
-          content: dto.content,
-          blogId: new ObjectId(dto.blogId),
-        },
-      },
-    );
-
-    if (updateResult.matchedCount < 1) {
-      throw new NotExistError('Post');
-    }
+  async save(postDocument: PostDocument): Promise<void> {
+    await postDocument.save();
   }
 
   async delete(id: string): Promise<void> {
-    const deleteResult = await postCollection.deleteOne({
-      _id: new ObjectId(id),
-    });
+    const deleteResult = await PostModel.findByIdAndDelete(id);
 
-    if (deleteResult.deletedCount < 1) {
+    if (!deleteResult) {
       throw new NotExistError('Post');
     }
   }

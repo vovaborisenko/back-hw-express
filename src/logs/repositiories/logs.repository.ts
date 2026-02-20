@@ -1,10 +1,13 @@
 import { Log } from '../types/log';
-import { logCollection } from '../../db/mongo.db';
+import { injectable } from 'inversify';
+import { LogModel } from '../models/log.model';
 
-export const logsRepository = {
+@injectable()
+export class LogsRepository {
   async create(log: Log): Promise<string> {
-    const insertResult = await logCollection.insertOne(log);
+    const logModel = new LogModel(log);
+    await logModel.save();
 
-    return insertResult.insertedId.toString();
-  },
-};
+    return logModel._id.toString();
+  }
+}

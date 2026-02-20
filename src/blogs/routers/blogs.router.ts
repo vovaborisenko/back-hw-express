@@ -6,7 +6,10 @@ import { superAdminGuardMiddleware } from '../../core/middlewares/guard/super-ad
 import { queryBlogListValidationMiddleware } from '../validation/query-blog-list-validation.middleware';
 import { queryPostListValidationMiddleware } from '../../posts/validation/query-post-list-validation.middleware';
 import { blogPostDtoValidationMiddleware } from '../validation/blog-post-dto-validation.middleware';
-import { blogController } from '../../composition.root';
+import { container } from '../../composition.root';
+import { BlogsController } from './blogs.controller';
+
+const blogsController = container.get(BlogsController);
 
 export const blogsRouter = Router({});
 
@@ -15,7 +18,7 @@ blogsRouter
     '/',
     queryBlogListValidationMiddleware,
     reqValidationResultMiddleware,
-    blogController.getItems,
+    blogsController.getItems,
   )
 
   .post(
@@ -23,14 +26,14 @@ blogsRouter
     superAdminGuardMiddleware,
     blogDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    blogController.createItem,
+    blogsController.createItem,
   )
 
   .get(
     '/:id',
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
-    blogController.getItem,
+    blogsController.getItem,
   )
 
   .put(
@@ -39,7 +42,7 @@ blogsRouter
     paramIdValidationMiddleware(),
     blogDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    blogController.updateItem,
+    blogsController.updateItem,
   )
 
   .delete(
@@ -47,7 +50,7 @@ blogsRouter
     superAdminGuardMiddleware,
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
-    blogController.deleteItem,
+    blogsController.deleteItem,
   )
 
   .get(
@@ -55,7 +58,7 @@ blogsRouter
     paramIdValidationMiddleware(),
     queryPostListValidationMiddleware,
     reqValidationResultMiddleware,
-    blogController.getItemPosts,
+    blogsController.getItemPosts,
   )
 
   .post(
@@ -63,5 +66,5 @@ blogsRouter
     superAdminGuardMiddleware,
     blogPostDtoValidationMiddleware,
     reqValidationResultMiddleware,
-    blogController.createItemPost,
+    blogsController.createItemPost,
   );

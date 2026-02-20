@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from 'express';
+import { RequestHandler } from 'express';
 import { PostCommentCreateDto } from '../../dto/post-comment.create-dto';
 import { HttpStatus } from '../../../core/types/http-status';
 import { CommentsService } from '../../../comments/application/comments.service';
@@ -6,7 +6,6 @@ import { ResultStatus } from '../../../core/types/result-object';
 import { resultStatusToHttpStatus } from '../../../core/utils/result-status-to-http-status';
 import { createErrorMessages } from '../../../core/utils/create-error-message';
 import { CommentsQueryRepository } from '../../../comments/repositories/comments.query-repository';
-import { mapToCommentViewModel } from '../../../comments/routers/mappers/map-to-comment-view-model';
 import { CommentViewModel } from '../../../comments/types/comment.view-model';
 import { ErrorMessages } from '../../../core/types/validation';
 
@@ -49,6 +48,6 @@ export function createCreatePostCommentHandler(
       return;
     }
 
-    res.status(HttpStatus.Created).send(mapToCommentViewModel(createdComment));
+    res.status(HttpStatus.Created).send(createdComment);
   };
 }

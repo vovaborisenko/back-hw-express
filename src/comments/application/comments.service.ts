@@ -4,19 +4,27 @@ import { CommentsRepository } from '../repositories/comments.repository';
 import { PostsRepository } from '../../posts/repositories/posts.repository';
 import { UsersRepository } from '../../users/repositories/users.repository';
 import { Result, ResultStatus } from '../../core/types/result-object';
+import { inject, injectable } from 'inversify';
+import { CommentModel } from '../models/comment.model';
+import { Types } from 'mongoose';
+import { CommentLikeStatusUpdateDto } from '../dto/comment-like-status.update-dto';
+import { LikeService } from '../../likes/application/like.service';
 
+@injectable()
 export class CommentsService {
   constructor(
+    @inject(CommentsRepository)
     private readonly commentsRepository: CommentsRepository,
-    private readonly postsRepository: PostsRepository,
-    private readonly usersRepository: UsersRepository,
+    @inject(LikeService) private readonly likesService: LikeService,
+    @inject(PostsRepository) private readonly postsRepository: PostsRepository,
+    @inject(UsersRepository) private readonly usersRepository: UsersRepository,
   ) {}
 
   async create(
     dto: CommentCreateDto,
     postId: string,
     userId: string,
-  ): Promise<Result<string> | Result<null, ResultStatus.NotFound>> {
+  ): Promise<Result<Types.ObjectId> | Result<null, ResultStatus.NotFound>> {
     const user = await this.usersRepository.findById(userId);
 
     if (!user) {
@@ -37,17 +45,18 @@ export class CommentsService {
       };
     }
 
-    const newComment = {
-      content: dto.content,
-      userId: user._id,
-      postId: post._id,
-      createdAt: new Date(),
-    };
+    const commentDocument = new CommentModel();
+
+    commentDocument.content = dto.content;
+    commentDocument.user = user._id;
+    commentDocument.post = post._id;
+
+    await this.commentsRepository.save(commentDocument);
 
     return {
       status: ResultStatus.Success,
       extensions: [],
-      data: await this.commentsRepository.create(newComment),
+      data: commentDocument._id,
     };
   }
 
@@ -71,7 +80,7 @@ export class CommentsService {
       };
     }
 
-    if (userId !== comment.userId.toString()) {
+    if (userId !== comment.user.toString()) {
       return {
         status: ResultStatus.Forbidden,
         extensions: [],
@@ -79,13 +88,37 @@ export class CommentsService {
       };
     }
 
-    const isSuccess = await this.commentsRepository.update(id, dto);
+    Object.assign(comment, dto);
+
+    await this.commentsRepository.save(comment);
 
     return {
-      status: isSuccess ? ResultStatus.Success : ResultStatus.NotFound,
+      status: ResultStatus.Success,
       extensions: [],
       data: null,
     };
+  }
+
+  async updateLikeStatus(
+    id: string,
+    userId: string,
+    dto: CommentLikeStatusUpdateDto,
+  ): Promise<Result<Types.ObjectId> | Result<null, ResultStatus.NotFound>> {
+    const comment = await this.commentsRepository.findById(id);
+
+    if (!comment) {
+      return {
+        status: ResultStatus.NotFound,
+        extensions: [],
+        data: null,
+      };
+    }
+
+    return this.likesService.updateOrCreate({
+      status: dto.likeStatus,
+      authorId: new Types.ObjectId(userId),
+      parentId: comment._id,
+    });
   }
 
   async delete(
@@ -107,7 +140,7 @@ export class CommentsService {
       };
     }
 
-    if (userId !== comment.userId.toString()) {
+    if (userId !== comment.user.toString()) {
       return {
         status: ResultStatus.Forbidden,
         extensions: [],

@@ -10,7 +10,9 @@ import { createGetPostCommentListHandler } from './handlers/get-post-comment-lis
 import { createGetPostListHandler } from './handlers/get-post-list.handler';
 import { createUpdatePostHandler } from './handlers/update-post.handler';
 import { BlogsQueryRepository } from '../../blogs/repositories/blogs.query-repository';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class PostsController {
   readonly createItem;
   readonly createItemComment;
@@ -21,10 +23,13 @@ export class PostsController {
   readonly updateItem;
 
   constructor(
-    private readonly postsService: PostsService,
+    @inject(PostsService) private readonly postsService: PostsService,
+    @inject(PostsQueryRepository)
     private readonly postsQueryRepository: PostsQueryRepository,
-    private readonly commentsService: CommentsService,
+    @inject(CommentsService) private readonly commentsService: CommentsService,
+    @inject(CommentsQueryRepository)
     private readonly commentsQueryRepository: CommentsQueryRepository,
+    @inject(BlogsQueryRepository)
     private readonly blogsQueryRepository: BlogsQueryRepository,
   ) {
     this.createItem = createCreatePostHandler(

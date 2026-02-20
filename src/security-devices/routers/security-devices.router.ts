@@ -2,7 +2,10 @@ import { Router } from 'express';
 import { paramIdDeviceValidationMiddleware } from '../../core/middlewares/validation/param-id-device-validation.middleware';
 import { refreshTokenGuard } from '../../core/middlewares/guard/refresh-token.guard';
 import { reqValidationResultMiddleware } from '../../core/middlewares/validation/req-validation-result.middleware';
-import { securityDevicesController } from '../../composition.root';
+import { container } from '../../composition.root';
+import { SecurityDevicesController } from './security-devices.controller';
+
+const securityDevicesController = container.get(SecurityDevicesController);
 
 export const securityDevicesRouter = Router({});
 securityDevicesRouter.use(refreshTokenGuard);

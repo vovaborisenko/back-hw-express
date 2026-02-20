@@ -1,88 +1,110 @@
-import { Filter, ObjectId, WithId } from 'mongodb';
-import { AggregatedComment, Comment } from '../types/comment';
-import { commentCollection, USER_COLLECTION_NAME } from '../../db/mongo.db';
+import { injectable } from 'inversify';
+import { PopulateOptions, QueryFilter, Types } from 'mongoose';
+import { Comment, PopulatedComment, PopulatingUser } from '../types/comment';
 import { QueryCommentList } from '../input/query-comment-list';
-import { SortDirection } from '../../core/types/sort-direction';
+import { CommentViewModel } from '../types/comment.view-model';
+import { CommentModel } from '../models/comment.model';
+import { Paginated } from '../../core/types/paginated';
+import { Like, LikeStatus } from '../../likes/types/like';
+import { LikeModel } from '../../likes/models/like.model';
 
+@injectable()
 export class CommentsQueryRepository {
+  private readonly populateOptions: PopulateOptions = {
+    path: 'user',
+    select: 'login',
+    options: { preserveNullAndError: true },
+    transform: (doc, _id) => doc ?? { _id },
+  };
+
   async findMany(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryCommentList,
     postId?: string,
-  ): Promise<{
-    items: WithId<AggregatedComment>[];
-    totalCount: number;
-  }> {
+    authorId?: string,
+  ): Promise<Paginated<CommentViewModel[]>> {
     const skip = pageSize * (pageNumber - 1);
-    const sortOrder = sortDirection === SortDirection.Desc ? -1 : 1;
     const sort = {
-      [sortBy]: sortOrder,
-      _id: sortOrder,
+      [sortBy]: sortDirection,
+      _id: sortDirection,
     };
 
-    const filter: Filter<Comment> = {};
+    const filter: QueryFilter<Comment> = {};
 
     if (postId) {
-      filter.postId = new ObjectId(postId);
+      filter.post = postId;
     }
 
     const [items, totalCount] = await Promise.all([
-      commentCollection
-        .aggregate<WithId<AggregatedComment>>([
-          { $match: filter },
-          ...getBaseAggregation(),
-          { $sort: sort },
-        ])
+      CommentModel.find(filter)
+        .sort(sort)
         .skip(skip)
         .limit(pageSize)
-        .toArray(),
-      commentCollection.countDocuments(filter),
+        .populate<{ user: PopulatingUser }>(this.populateOptions)
+        .populate<{ likesCount: number }>('likesCount')
+        .populate<{ dislikesCount: number }>('dislikesCount')
+        .lean(),
+      CommentModel.countDocuments(filter),
+    ]);
+    const userLikes = await LikeModel.find({
+      author: authorId,
+      parent: { $in: items.map(({ _id }) => _id) },
+    }).lean();
+    const userLikesMap = new Map(
+      userLikes.map((like) => [like.parent.toString(), like]),
+    );
+
+    return {
+      page: pageNumber,
+      pageSize,
+      pagesCount: Math.ceil(totalCount / pageSize),
+      totalCount,
+      items: items.map((comment) =>
+        this.toViewModel({
+          comment,
+          userLike: userLikesMap.get(comment._id.toString()),
+        }),
+      ),
+    };
+  }
+
+  async findById(
+    id: string | Types.ObjectId,
+    authorId?: string | Types.ObjectId,
+  ): Promise<CommentViewModel | null> {
+    const [populatedComment, userLike] = await Promise.all([
+      CommentModel.findById(id)
+        .populate<{ user: PopulatingUser }>(this.populateOptions)
+        .populate<{ likesCount: number }>('likesCount')
+        .populate<{ dislikesCount: number }>('dislikesCount')
+        .lean(),
+      LikeModel.findOne({ author: authorId, parent: id }).lean(),
     ]);
 
-    return { items, totalCount };
+    return populatedComment
+      ? this.toViewModel({ comment: populatedComment, userLike })
+      : null;
   }
 
-  async findById(id: string): Promise<WithId<AggregatedComment> | null> {
-    const [result] = await commentCollection
-      .aggregate<WithId<AggregatedComment>>([
-        {
-          $match: {
-            _id: new ObjectId(id),
-          },
-        },
-        ...getBaseAggregation(),
-        { $limit: 1 },
-      ])
-      .toArray();
-
-    return result || null;
+  toViewModel({
+    comment,
+    userLike,
+  }: {
+    comment: PopulatedComment;
+    userLike?: Like | null;
+  }): CommentViewModel {
+    return {
+      id: comment._id.toString(),
+      content: comment.content,
+      commentatorInfo: {
+        userId: comment.user._id.toString(),
+        userLogin: comment.user.login,
+      },
+      likesInfo: {
+        dislikesCount: comment.dislikesCount,
+        likesCount: comment.likesCount,
+        myStatus: userLike?.status || LikeStatus.None,
+      },
+      createdAt: comment.createdAt.toISOString(),
+    };
   }
-}
-
-function getBaseAggregation() {
-  return [
-    {
-      $lookup: {
-        from: USER_COLLECTION_NAME,
-        localField: 'userId',
-        foreignField: '_id',
-        as: 'user',
-      },
-    },
-    {
-      $unwind: {
-        path: '$user',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $addFields: {
-        userLogin: '$user.login',
-      },
-    },
-    {
-      $project: {
-        user: 0,
-      },
-    },
-  ];
 }

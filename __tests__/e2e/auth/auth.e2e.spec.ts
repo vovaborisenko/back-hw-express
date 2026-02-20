@@ -7,11 +7,7 @@ import { SETTINGS } from '../../../src/core/settings/settings';
 import { PATH } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-status';
 import { validAuth } from '../constants/common';
-import {
-  createUser,
-  createUserAndLogin,
-  userDto,
-} from '../utils/user/user.util';
+import { createUser, createUserAndLogin } from '../utils/user/user.util';
 import { extractCookies } from '../utils/cookies/cookies';
 import { wait } from '../utils/core/wait';
 
@@ -236,14 +232,6 @@ describe('Auth API', () => {
   });
 
   describe(`Too many attempts`, () => {
-    beforeAll(() => {
-      jest.useFakeTimers({ advanceTimers: true });
-    });
-
-    afterAll(() => {
-      jest.useRealTimers();
-    });
-
     it.each`
       path                              | maxAttempts
       ${'login'}                        | ${5}
@@ -258,7 +246,7 @@ describe('Auth API', () => {
         await runTest();
 
         // after 10sec has more attempts
-        jest.setSystemTime(Date.now() + 1e4);
+        await wait(SETTINGS.RATE_LIMIT_PERIOD);
         await runTest();
 
         async function runTest() {
@@ -274,6 +262,7 @@ describe('Auth API', () => {
           }
         }
       },
+      SETTINGS.RATE_LIMIT_PERIOD + 5000, // Таймаут = период ожидания + запас
     );
   });
 });

@@ -3,7 +3,9 @@ import { SETTINGS } from '../../core/settings/settings';
 import { RefreshTokenPayload, TokenPayload } from '../types/auth';
 import { Result, ResultStatus } from '../../core/types/result-object';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
+import { injectable } from 'inversify';
 
+@injectable()
 export class JwtService {
   createToken(userId: string): string {
     return jsonwebtoken.sign({ userId }, SETTINGS.AC_SECRET, {

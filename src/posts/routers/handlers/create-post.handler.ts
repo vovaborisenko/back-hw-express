@@ -3,7 +3,6 @@ import { HttpStatus } from '../../../core/types/http-status';
 import { PostCreateDto } from '../../dto/post.create-dto';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { PostViewModel } from '../../types/post.view-model';
-import { mapToPostViewModel } from '../mappers/map-to-post-view-model';
 import { PostsService } from '../../application/posts.service';
 import { PostsQueryRepository } from '../../repositories/posts.query-repository';
 
@@ -19,6 +18,6 @@ export function createCreatePostHandler(
       throw new NotExistError('Post');
     }
 
-    res.status(HttpStatus.Created).json(mapToPostViewModel(createdPost));
+    res.status(HttpStatus.Created).json(createdPost);
   };
 }

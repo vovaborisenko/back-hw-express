@@ -1,7 +1,6 @@
 import { RequestHandler } from 'express';
 import { PostsQueryRepository } from '../../repositories/posts.query-repository';
 import { NotExistError } from '../../../core/errors/not-exist.error';
-import { mapToPostViewModel } from '../mappers/map-to-post-view-model';
 import { PostViewModel } from '../../types/post.view-model';
 
 export function createGetPostHandler(
@@ -14,6 +13,6 @@ export function createGetPostHandler(
       throw new NotExistError('Post');
     }
 
-    res.json(mapToPostViewModel(post));
+    res.json(post);
   };
 }

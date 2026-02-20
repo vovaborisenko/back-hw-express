@@ -3,7 +3,6 @@ import { ErrorMessages } from '../../../core/types/validation';
 import { MeViewModel } from '../../types/me.view-model';
 import { HttpStatus } from '../../../core/types/http-status';
 import { UsersQueryRepository } from '../../../users/repositories/users.query-repository';
-import { mapToMeViewModel } from '../mappers/map-to-me-view-model';
 
 export function createMeHandler(
   usersQueryRepository: UsersQueryRepository,
@@ -17,7 +16,7 @@ export function createMeHandler(
       return;
     }
 
-    const user = await usersQueryRepository.findById(userId);
+    const user = await usersQueryRepository.findMeById(userId);
 
     if (!user) {
       res.sendStatus(HttpStatus.Unauthorized);
@@ -25,6 +24,6 @@ export function createMeHandler(
       return;
     }
 
-    res.status(HttpStatus.Ok).send(mapToMeViewModel(user));
+    res.status(HttpStatus.Ok).send(user);
   };
 }

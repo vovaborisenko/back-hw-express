@@ -1,7 +1,6 @@
 import { RequestHandler } from 'express';
 import { NotExistError } from '../../../core/errors/not-exist.error';
 import { BlogViewModel } from '../../types/blog.view-model';
-import { mapToBlogViewModel } from '../mappers/map-to-blog-view-model';
 import { BlogsQueryRepository } from '../../repositories/blogs.query-repository';
 
 export function createGetBlogHandler(
@@ -14,6 +13,6 @@ export function createGetBlogHandler(
       throw new NotExistError('Blog');
     }
 
-    res.json(mapToBlogViewModel(blog));
+    res.json(blog);
   };
 }

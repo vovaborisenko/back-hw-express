@@ -11,7 +11,9 @@ import { createRegistrationConfirmationHandler } from './handlers/registration-c
 import { createRegistrationEmailResendingHandler } from './handlers/registration-email-resending.handler';
 import { createPasswordRecoveryHandler } from './handlers/password-recovery.handler';
 import { createPasswordUpdateHandler } from './handlers/password-update.handler';
+import { inject, injectable } from 'inversify';
 
+@injectable()
 export class AuthController {
   readonly login;
   readonly logout;
@@ -24,9 +26,11 @@ export class AuthController {
   readonly registrationEmailResending;
 
   constructor(
-    private readonly authService: AuthService,
-    private readonly passwordService: PasswordService,
+    @inject(AuthService) private readonly authService: AuthService,
+    @inject(PasswordService) private readonly passwordService: PasswordService,
+    @inject(SecurityDevicesService)
     private readonly securityDevicesService: SecurityDevicesService,
+    @inject(UsersQueryRepository)
     private readonly usersQueryRepository: UsersQueryRepository,
   ) {
     this.login = createLoginHandler(this.authService);

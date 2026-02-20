@@ -1,7 +1,6 @@
 import { RequestHandler } from 'express';
 import { HttpStatus } from '../../../core/types/http-status';
 import { UserViewModel } from '../../types/user.view-model';
-import { mapToUserViewModel } from '../mappers/map-to-user-view-model';
 import { UserCreateDto } from '../../dto/user.create-dto';
 import { UsersService } from '../../application/users.service';
 import { UsersQueryRepository } from '../../repositories/users.query-repository';
@@ -25,12 +24,14 @@ export function createCreateUserHandler(
       return;
     }
 
-    const createdUser = await usersQueryRepository.findById(result.data.id);
+    const createdUser = await usersQueryRepository.findById(
+      result.data.user.id,
+    );
 
     if (!createdUser) {
       throw new NotExistError('User');
     }
 
-    res.status(HttpStatus.Created).json(mapToUserViewModel(createdUser));
+    res.status(HttpStatus.Created).json(createdUser);
   };
 }

@@ -1,84 +1,71 @@
-import { ObjectId, WithId } from 'mongodb';
-import { AggregatedPost } from '../types/post';
-import { BLOG_COLLECTION_NAME, postCollection } from '../../db/mongo.db';
+import { PopulateOptions, QueryFilter, Types } from 'mongoose';
+import { PopulatedPost, PopulatingBlog, Post } from '../types/post';
 import { QueryPostList } from '../input/query-post-list';
-import { SortDirection } from '../../core/types/sort-direction';
+import { injectable } from 'inversify';
+import { PostViewModel } from '../types/post.view-model';
+import { PostModel } from '../models/post.model';
+import { Paginated } from '../../core/types/paginated';
 
+@injectable()
 export class PostsQueryRepository {
+  private readonly populateOptions: PopulateOptions = {
+    path: 'blog',
+    select: 'name',
+    options: { preserveNullAndError: true },
+    transform: (doc, _id) => doc ?? { _id },
+  };
+
   async findMany(
     { pageSize, pageNumber, sortDirection, sortBy }: QueryPostList,
     blogId?: string,
-  ): Promise<{ items: WithId<AggregatedPost>[]; totalCount: number }> {
+  ): Promise<Paginated<PostViewModel[]>> {
     const skip = pageSize * (pageNumber - 1);
-    const sortOrder = sortDirection === SortDirection.Desc ? -1 : 1;
-    let sort = {
-      [sortBy]: sortOrder,
-      _id: sortOrder,
+    const sort = {
+      [sortBy]: sortDirection,
+      _id: sortDirection,
     };
-    const filter: any = {};
+    const filter: QueryFilter<Post> = {};
 
     if (blogId) {
-      filter.blogId = new ObjectId(blogId);
+      filter.blog = blogId;
     }
 
     const [items, totalCount] = await Promise.all([
-      postCollection
-        .aggregate<WithId<AggregatedPost>>([
-          { $match: filter },
-          ...getBaseAggregation(),
-          { $sort: sort },
-        ])
+      PostModel.find(filter)
+        .sort(sort)
         .skip(skip)
         .limit(pageSize)
-        .toArray(),
-      postCollection.countDocuments(filter),
+        .populate<{ blog: PopulatingBlog }>(this.populateOptions)
+        .lean(),
+      PostModel.countDocuments(filter),
     ]);
 
-    return { items, totalCount };
+    return {
+      page: pageNumber,
+      pageSize,
+      pagesCount: Math.ceil(totalCount / pageSize),
+      totalCount,
+      items: items.map(this.toViewModel),
+    };
   }
 
-  async findById(id: string): Promise<WithId<AggregatedPost> | null> {
-    const [result] = await postCollection
-      .aggregate<WithId<AggregatedPost>>([
-        {
-          $match: {
-            _id: new ObjectId(id),
-          },
-        },
-        ...getBaseAggregation(),
-        { $limit: 1 },
-      ])
-      .toArray();
+  async findById(id: string | Types.ObjectId): Promise<PostViewModel | null> {
+    const populatedPost = await PostModel.findById(id)
+      .populate<{ blog: PopulatingBlog }>(this.populateOptions)
+      .lean();
 
-    return result || null;
+    return populatedPost ? this.toViewModel(populatedPost) : null;
   }
-}
 
-function getBaseAggregation() {
-  return [
-    {
-      $lookup: {
-        from: BLOG_COLLECTION_NAME,
-        localField: 'blogId',
-        foreignField: '_id',
-        as: 'blog',
-      },
-    },
-    {
-      $unwind: {
-        path: '$blog',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $addFields: {
-        blogName: '$blog.name',
-      },
-    },
-    {
-      $project: {
-        blog: 0,
-      },
-    },
-  ];
+  private toViewModel(post: PopulatedPost): PostViewModel {
+    return {
+      id: post._id.toString(),
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      blogId: post.blog._id.toString(),
+      blogName: post.blog.name ?? null,
+      createdAt: post.createdAt.toISOString(),
+    };
+  }
 }

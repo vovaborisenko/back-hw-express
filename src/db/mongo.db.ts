@@ -6,6 +6,7 @@ import { Post } from '../posts/types/post';
 import { User } from '../users/types/user';
 import { SETTINGS } from '../core/settings/settings';
 import { SecurityDevice } from '../security-devices/types/security-device';
+import * as mongoose from 'mongoose';
 
 export const BLOG_COLLECTION_NAME = 'blogs';
 const COMMENTS_COLLECTION_NAME = 'comments';
@@ -23,33 +24,20 @@ export let postCollection: Collection<Post>;
 export let userCollection: Collection<User>;
 
 export async function runDB(url: string): Promise<void> {
-  client = new MongoClient(url);
-  const db: Db = client.db(SETTINGS.DB_NAME);
-
-  //Инициализация коллекций
-  blogCollection = db.collection<Blog>(BLOG_COLLECTION_NAME);
-  commentCollection = db.collection<Comment>(COMMENTS_COLLECTION_NAME);
-  securityDeviceCollection = db.collection<SecurityDevice>(
-    SECURITY_DEVICE_COLLECTION_NAME,
-  );
-  logCollection = db.collection<Log>(LOG_COLLECTION_NAME);
-  postCollection = db.collection<Post>(POST_COLLECTION_NAME);
-  userCollection = db.collection<User>(USER_COLLECTION_NAME);
-
   try {
-    await client.connect();
-    await db.command({ ping: 1 });
+    await mongoose.connect(url, { dbName: SETTINGS.DB_NAME });
     console.log('✅ Connected to the database');
   } catch (e) {
-    await client.close();
+    await mongoose.disconnect();
     throw new Error(`❌ Database not connected: ${e}`);
   }
 }
 
 export async function stopDb() {
-  if (!client) {
-    throw new Error(`❌ No active client`);
-  }
-  await client.close();
+  // if (!mongoose.connection) {
+  //   throw new Error(`❌ No active client`);
+  // }
+  await mongoose.disconnect();
+  // await client.close();
   console.log('✅ DB Stopped');
 }

@@ -9,10 +9,13 @@ import { CommentViewModel } from '../../../../src/comments/types/comment.view-mo
 import { createUserAndLogin } from '../user/user.util';
 import { createBlogAndHisPost } from '../post/post.util';
 import { UserViewModel } from '../../../../src/users/types/user.view-model';
+import { CommentLikeStatusUpdateDto } from '../../../../src/comments/dto/comment-like-status.update-dto';
+import { LikeStatus } from '../../../../src/likes/types/like';
 
 export const commentDto: {
   create: CommentCreateDto;
   update: CommentUpdateDto;
+  updateLikeStatus: CommentLikeStatusUpdateDto[];
 } = {
   create: {
     content:
@@ -22,6 +25,17 @@ export const commentDto: {
     content:
       'React 18 приносит революционные изменения в рендеринг приложений...',
   },
+  updateLikeStatus: [
+    {
+      likeStatus: LikeStatus.Like,
+    },
+    {
+      likeStatus: LikeStatus.Dislike,
+    },
+    {
+      likeStatus: LikeStatus.None,
+    },
+  ],
 };
 
 export async function createComment(

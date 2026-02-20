@@ -1,75 +1,90 @@
-import { ObjectId, WithId } from 'mongodb';
-import { User } from '../types/user';
-import { userCollection } from '../../db/mongo.db';
 import { NotExistError } from '../../core/errors/not-exist.error';
+import { injectable } from 'inversify';
+import { UserDocument, UserModel } from '../models/user.model';
+import { User } from '../types/user';
+import { Types } from 'mongoose';
 
+@injectable()
 export class UsersRepository {
-  findById(id: string): Promise<WithId<User> | null> {
-    return userCollection.findOne({ _id: new ObjectId(id) });
+  findById(id: string | Types.ObjectId): Promise<UserDocument | null> {
+    return UserModel.findById(id);
   }
 
-  findByLoginOrEmail(loginOrEmail: string): Promise<WithId<User> | null> {
-    return userCollection.findOne({
+  findBy(filter: Partial<User>): Promise<UserDocument | null> {
+    return UserModel.findOne(filter);
+  }
+
+  findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null> {
+    return UserModel.findOne({
       $or: [{ login: loginOrEmail }, { email: loginOrEmail }],
     });
   }
 
-  findByLogin(login: string): Promise<WithId<User> | null> {
-    return userCollection.findOne({ login });
+  findByLogin(login: string): Promise<UserDocument | null> {
+    return UserModel.findOne({ login });
   }
 
-  findByEmail(email: string): Promise<WithId<User> | null> {
-    return userCollection.findOne({ email });
+  findByEmail(email: string): Promise<UserDocument | null> {
+    return UserModel.findOne({ email });
   }
 
-  findByEmailConfirmationCode(code: string): Promise<WithId<User> | null> {
-    return userCollection.findOne({
+  findByEmailConfirmationCode(code: string): Promise<UserDocument | null> {
+    return UserModel.findOne({
       'emailConfirmation.confirmationCode': code,
     });
   }
 
-  async create(user: User): Promise<string> {
-    const insertResult = await userCollection.insertOne(user);
-
-    return insertResult.insertedId.toString();
+  findByRecoveryCode(code: string): Promise<UserDocument | null> {
+    return UserModel.findOne({
+      'returnecovery.code': code,
+      'recovery.expirationDate': { $gt: new Date() },
+    });
   }
 
-  async update(id: string, user: Partial<User>): Promise<boolean> {
-    const updateResult = await userCollection.updateOne(
-      { _id: new ObjectId(id) },
-      { $set: user },
-    );
-
-    return updateResult.matchedCount === 1;
+  async save(user: UserDocument): Promise<void> {
+    await user.save();
   }
 
-  async updateBy(filter: Partial<User>, user: Partial<User>): Promise<boolean> {
-    const updateResult = await userCollection.updateOne(filter, { $set: user });
-
-    return updateResult.matchedCount === 1;
-  }
-
-  async updateByRecoveryCode(
-    code: string,
-    user: Partial<User>,
-  ): Promise<boolean> {
-    const updateResult = await userCollection.updateOne(
-      {
-        'recovery.code': code,
-        'recovery.expirationDate': { $gt: new Date() },
-      },
-      { $set: user },
-    );
-
-    return updateResult.matchedCount === 1;
-  }
+  // async create1(user: User): Promise<string> {
+  //   const insertResult = await userCollection.insertOne(user);
+  //
+  //   return insertResult.insertedId.toString();
+  // }
+  //
+  // async update1(id: string, user: Partial<User>): Promise<boolean> {
+  //   const updateResult = await userCollection.updateOne(
+  //     { _id: new ObjectId(id) },
+  //     { $set: user },
+  //   );
+  //
+  //   return updateResult.matchedCount === 1;
+  // }
+  //
+  // async updateBy1(filter: Partial<User>, user: Partial<User>): Promise<boolean> {
+  //   const updateResult = await userCollection.updateOne(filter, { $set: user });
+  //
+  //   return updateResult.matchedCount === 1;
+  // }
+  //
+  // async updateByRecoveryCode1(
+  //   code: string,
+  //   user: Partial<User>,
+  // ): Promise<boolean> {
+  //   const updateResult = await userCollection.updateOne(
+  //     {
+  //       'recovery.code': code,
+  //       'recovery.expirationDate': { $gt: new Date() },
+  //     },
+  //     { $set: user },
+  //   );
+  //
+  //   return updateResult.matchedCount === 1;
+  // }
 
   async delete(id: string): Promise<void> {
-    const deleteResult = await userCollection.deleteOne({
-      _id: new ObjectId(id),
-    });
+    const deleteResult = await UserModel.findByIdAndDelete(id);
 
-    if (deleteResult.deletedCount < 1) {
+    if (!deleteResult) {
       throw new NotExistError('User');
     }
   }
