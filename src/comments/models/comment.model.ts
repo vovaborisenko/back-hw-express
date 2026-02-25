@@ -1,6 +1,6 @@
 import { HydratedDocument, model, Schema } from 'mongoose';
 import { Comment } from '../types/comment';
-import { LikeStatus } from '../../likes/types/like';
+import { virtualFields } from '../../likes/models/like.model';
 
 const commentSchema = new Schema<Comment>(
   {
@@ -10,26 +10,9 @@ const commentSchema = new Schema<Comment>(
     createdAt: { type: Date, default: Date.now },
   },
   {
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true },
+    virtuals: virtualFields,
   },
 );
-
-commentSchema.virtual('likesCount', {
-  ref: 'Like',
-  localField: '_id',
-  foreignField: 'parent',
-  count: true,
-  match: { status: LikeStatus.Like },
-});
-
-commentSchema.virtual('dislikesCount', {
-  ref: 'Like',
-  localField: '_id',
-  foreignField: 'parent',
-  count: true,
-  match: { status: LikeStatus.Dislike },
-});
 
 export const CommentModel = model<Comment>('Comment', commentSchema);
 export type CommentDocument = HydratedDocument<Comment>;

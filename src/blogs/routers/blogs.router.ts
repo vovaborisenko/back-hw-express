@@ -8,6 +8,7 @@ import { queryPostListValidationMiddleware } from '../../posts/validation/query-
 import { blogPostDtoValidationMiddleware } from '../validation/blog-post-dto-validation.middleware';
 import { container } from '../../composition.root';
 import { BlogsController } from './blogs.controller';
+import { optionalUserMiddleware } from '../../core/middlewares/optional-user.middleware';
 
 const blogsController = container.get(BlogsController);
 
@@ -58,6 +59,7 @@ blogsRouter
     paramIdValidationMiddleware(),
     queryPostListValidationMiddleware,
     reqValidationResultMiddleware,
+    optionalUserMiddleware,
     blogsController.getItemPosts,
   )
 

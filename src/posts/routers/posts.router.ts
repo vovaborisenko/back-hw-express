@@ -10,6 +10,7 @@ import { queryCommentListValidationMiddleware } from '../../comments/validation/
 import { container } from '../../composition.root';
 import { PostsController } from './posts.controller';
 import { optionalUserMiddleware } from '../../core/middlewares/optional-user.middleware';
+import { likeStatusUpdateDtoValidationMiddleware } from '../../likes/validation/like-status-update-dto-validation.middleware';
 
 const postsController = container.get(PostsController);
 
@@ -20,6 +21,7 @@ postsRouter
     '/',
     queryPostListValidationMiddleware,
     reqValidationResultMiddleware,
+    optionalUserMiddleware,
     postsController.getItems,
   )
 
@@ -35,6 +37,7 @@ postsRouter
     '/:id',
     paramIdValidationMiddleware(),
     reqValidationResultMiddleware,
+    optionalUserMiddleware,
     postsController.getItem,
   )
 
@@ -45,6 +48,15 @@ postsRouter
     postDtoValidationMiddleware,
     reqValidationResultMiddleware,
     postsController.updateItem,
+  )
+
+  .put(
+    '/:id/like-status',
+    accessTokenGuard,
+    paramIdValidationMiddleware(),
+    likeStatusUpdateDtoValidationMiddleware,
+    reqValidationResultMiddleware,
+    postsController.updateItemLikeStatus,
   )
 
   .delete(

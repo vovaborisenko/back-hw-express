@@ -17,7 +17,11 @@ import {
   createComment,
   createComments,
 } from '../utils/comment/comment.util';
-import { createUserAndLogin } from '../utils/user/user.util';
+import {
+  createUserAndLogin,
+  createUsersAndLogin,
+} from '../utils/user/user.util';
+import { LikeStatus } from '../../../src/likes/types/like';
 
 describe('Posts API', () => {
   const app = express();
@@ -77,6 +81,12 @@ describe('Posts API', () => {
         blogName: blog.name,
         id: expect.any(String),
         createdAt: expect.any(String),
+        extendedLikesInfo: {
+          dislikesCount: 0,
+          likesCount: 0,
+          myStatus: LikeStatus.None,
+          newestLikes: [],
+        },
       });
     });
   });
@@ -164,6 +174,177 @@ describe('Posts API', () => {
     });
   });
 
+  describe(`PUT ${PATH.POSTS}/:id/like-status`, () => {
+    it('should return 404 when no post', async () => {
+      const { token } = await createUserAndLogin(app);
+      await request(app)
+        .put(`${PATH.POSTS}/${validMongoId}/like-status`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(commentDto.updateLikeStatus[0])
+        .expect(HttpStatus.NotFound);
+    });
+
+    it('should return 204 when requested id exist', async () => {
+      const [, post] = await createBlogAndHisPost(app);
+      const { token, user } = await createUserAndLogin(app);
+
+      await request(app)
+        .put(`${PATH.POSTS}/${post.id}/like-status`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(commentDto.updateLikeStatus[0])
+        .expect(HttpStatus.NoContent);
+
+      const response = await request(app)
+        .get(`${PATH.POSTS}/${post.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(HttpStatus.Ok);
+
+      expect(response.body).toEqual({
+        ...post,
+        extendedLikesInfo: {
+          ...post.extendedLikesInfo,
+          likesCount: post.extendedLikesInfo.likesCount + 1,
+          myStatus: LikeStatus.Like,
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              login: user.login,
+              userId: user.id,
+            },
+          ],
+        },
+      });
+
+      await request(app)
+        .put(`${PATH.POSTS}/${post.id}/like-status`)
+        .set('Authorization', `Bearer ${token}`)
+        .send(commentDto.updateLikeStatus[1])
+        .expect(HttpStatus.NoContent);
+
+      const responseAfterDislike = await request(app)
+        .get(`${PATH.POSTS}/${post.id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .expect(HttpStatus.Ok);
+
+      expect(responseAfterDislike.body).toEqual({
+        ...post,
+        extendedLikesInfo: {
+          ...post.extendedLikesInfo,
+          dislikesCount: post.extendedLikesInfo.dislikesCount + 1,
+          myStatus: LikeStatus.Dislike,
+        },
+      });
+    });
+
+    it('should update likes', async () => {
+      const [, post] = await createBlogAndHisPost(app);
+      const createdUsers = await createUsersAndLogin(4, app);
+
+      // set likes
+      for (let i = 0; i < createdUsers.length; i++) {
+        const { user, token } = createdUsers[i];
+        await request(app)
+          .put(`${PATH.POSTS}/${post.id}/like-status`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(commentDto.updateLikeStatus[0])
+          .expect(HttpStatus.NoContent);
+
+        const response = await request(app)
+          .get(`${PATH.POSTS}/${post.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .expect(HttpStatus.Ok);
+
+        post.extendedLikesInfo.newestLikes = [
+          {
+            addedAt: expect.any(String),
+            login: user.login,
+            userId: user.id,
+          },
+          ...post.extendedLikesInfo.newestLikes,
+        ].slice(0, 3);
+        post.extendedLikesInfo.likesCount += 1;
+        const expectedLikeInfo = {
+          ...post.extendedLikesInfo,
+          myStatus: LikeStatus.Like,
+        };
+
+        expect(response.body.extendedLikesInfo).toEqual(expectedLikeInfo);
+
+        const responseUnauth = await request(app)
+          .get(`${PATH.POSTS}/${post.id}`)
+          .expect(HttpStatus.Ok);
+
+        expect(responseUnauth.body.extendedLikesInfo).toEqual({
+          ...post.extendedLikesInfo,
+          myStatus: LikeStatus.None,
+        });
+      }
+      // set dislikes
+      for (let i = 0; i < createdUsers.length; i++) {
+        const { user, token } = createdUsers[i];
+        await request(app)
+          .put(`${PATH.POSTS}/${post.id}/like-status`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(commentDto.updateLikeStatus[1])
+          .expect(HttpStatus.NoContent);
+
+        const response = await request(app)
+          .get(`${PATH.POSTS}/${post.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .expect(HttpStatus.Ok);
+
+        post.extendedLikesInfo.newestLikes =
+          post.extendedLikesInfo.newestLikes.filter(
+            ({ userId }) => userId !== user.id,
+          );
+        post.extendedLikesInfo.likesCount -= 1;
+        post.extendedLikesInfo.dislikesCount += 1;
+        expect(response.body.extendedLikesInfo).toEqual({
+          ...post.extendedLikesInfo,
+          myStatus: LikeStatus.Dislike,
+        });
+
+        const responseUnauth = await request(app)
+          .get(`${PATH.POSTS}/${post.id}`)
+          .expect(HttpStatus.Ok);
+
+        expect(responseUnauth.body.extendedLikesInfo).toEqual({
+          ...post.extendedLikesInfo,
+          myStatus: LikeStatus.None,
+        });
+      }
+      // set none
+      for (let i = 3; i < createdUsers.length; i++) {
+        const { token } = createdUsers[i];
+        await request(app)
+          .put(`${PATH.POSTS}/${post.id}/like-status`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(commentDto.updateLikeStatus[2])
+          .expect(HttpStatus.NoContent);
+
+        const response = await request(app)
+          .get(`${PATH.POSTS}/${post.id}`)
+          .set('Authorization', `Bearer ${token}`)
+          .expect(HttpStatus.Ok);
+
+        post.extendedLikesInfo.dislikesCount -= 1;
+        expect(response.body.extendedLikesInfo).toEqual({
+          ...post.extendedLikesInfo,
+          myStatus: LikeStatus.None,
+        });
+
+        const responseUnauth = await request(app)
+          .get(`${PATH.POSTS}/${post.id}`)
+          .expect(HttpStatus.Ok);
+
+        expect(responseUnauth.body.extendedLikesInfo).toEqual({
+          ...post.extendedLikesInfo,
+          myStatus: LikeStatus.None,
+        });
+      }
+    });
+  });
+
   describe(`DELETE ${PATH.POSTS}/:id`, () => {
     it('should return 404 when no post', async () => {
       await request(app)
@@ -215,6 +396,11 @@ describe('Posts API', () => {
         },
         id: expect.any(String),
         createdAt: expect.any(String),
+        likesInfo: {
+          dislikesCount: 0,
+          likesCount: 0,
+          myStatus: LikeStatus.None,
+        },
       });
     });
   });

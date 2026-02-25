@@ -7,7 +7,10 @@ export function createGetPostHandler(
   postsQueryRepository: PostsQueryRepository,
 ): RequestHandler<{ id: string }, PostViewModel> {
   return async function getPostHandler(req, res) {
-    const post = await postsQueryRepository.findById(req.params.id);
+    const post = await postsQueryRepository.findById(
+      req.params.id,
+      req.user?.id,
+    );
 
     if (!post) {
       throw new NotExistError('Post');
