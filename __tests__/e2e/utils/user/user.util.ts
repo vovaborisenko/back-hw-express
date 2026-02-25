@@ -119,3 +119,27 @@ export async function createUserAndLogin(
     ...tokens,
   };
 }
+
+export async function createUsersAndLogin(
+  count: number,
+  app: App,
+  dto: UserCreateDto = userDto.create[0],
+  userAgent: string = USER_AGENTS[0],
+): Promise<{ user: UserViewModel; token: string; refreshToken: string }[]> {
+  const requests = Array.from({ length: count }).map(async (_, index) => {
+    const userDto = {
+      login: `${dto.login}${index}`,
+      email: `${index}${dto.email}`,
+      password: `${dto.password}${index}`,
+    };
+    const user = await createUser(app, userDto);
+    const tokens = await loginUser(app, userDto, userAgent);
+
+    return {
+      user,
+      ...tokens,
+    };
+  });
+
+  return Promise.all(requests);
+}

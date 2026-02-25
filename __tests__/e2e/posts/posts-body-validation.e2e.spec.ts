@@ -114,6 +114,35 @@ describe('Posts API body validation', () => {
     );
   });
 
+  describe(`PUT ${PATH.POSTS}/:id/like-status`, () => {
+    it.each`
+      field           | value        | message
+      ${'likeStatus'} | ${null}      | ${'likeStatus should be string'}
+      ${'likeStatus'} | ${5}         | ${'likeStatus should be string'}
+      ${'likeStatus'} | ${''}        | ${'Should be on of None, Like, Dislike'}
+      ${'likeStatus'} | ${'    '}    | ${'Should be on of None, Like, Dislike'}
+      ${'likeStatus'} | ${'unknown'} | ${'Should be on of None, Like, Dislike'}
+    `(
+      'should throw 400: field = $field, value = $value, message = $message',
+      async ({ field, value, message }) => {
+        const [, post] = await createBlogAndHisPost(app);
+        const { token } = await createUserAndLogin(app);
+
+        const response = await request(app)
+          .put(`${PATH.POSTS}/${post.id}/like-status`)
+          .set('Authorization', `Bearer ${token}`)
+          .send({ [field]: value })
+          .expect(HttpStatus.BadRequest);
+
+        expect(
+          response.body.errorsMessages.find(
+            (error: { field: string }) => error.field === field,
+          )?.message,
+        ).toBe(message);
+      },
+    );
+  });
+
   describe(`POST ${PATH.POSTS}/:id/comments`, () => {
     it.each`
       field        | value              | message
