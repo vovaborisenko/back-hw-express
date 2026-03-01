@@ -22,10 +22,10 @@ export function createGetBlogPostListHandler(
       locations: ['query'],
       includeOptionals: true,
     });
-    const paginatedPosts = await postsQueryRepository.findMany(
-      queryParams,
-      req.params.id,
-    );
+    const paginatedPosts = await postsQueryRepository.findMany(queryParams, {
+      blogId: req.params.id,
+      userId: req.user?.id,
+    });
 
     res.json(paginatedPosts);
   };

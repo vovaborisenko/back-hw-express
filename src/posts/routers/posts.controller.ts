@@ -9,6 +9,7 @@ import { createGetPostHandler } from './handlers/get-post.handler';
 import { createGetPostCommentListHandler } from './handlers/get-post-comment-list.handler';
 import { createGetPostListHandler } from './handlers/get-post-list.handler';
 import { createUpdatePostHandler } from './handlers/update-post.handler';
+import { createUpdatePostLikeStatusHandler } from './handlers/update-post-like-status.handler';
 import { BlogsQueryRepository } from '../../blogs/repositories/blogs.query-repository';
 import { inject, injectable } from 'inversify';
 
@@ -21,6 +22,7 @@ export class PostsController {
   readonly getItemComments;
   readonly getItems;
   readonly updateItem;
+  readonly updateItemLikeStatus;
 
   constructor(
     @inject(PostsService) private readonly postsService: PostsService,
@@ -50,6 +52,9 @@ export class PostsController {
     this.updateItem = createUpdatePostHandler(
       this.postsService,
       this.blogsQueryRepository,
+    );
+    this.updateItemLikeStatus = createUpdatePostLikeStatusHandler(
+      this.postsService,
     );
   }
 }

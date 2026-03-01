@@ -13,7 +13,9 @@ export function createGetPostListHandler(
       locations: ['query'],
       includeOptionals: true,
     });
-    const paginatedPosts = await postsQueryRepository.findMany(queryParams);
+    const paginatedPosts = await postsQueryRepository.findMany(queryParams, {
+      userId: req.user?.id,
+    });
 
     res.json(paginatedPosts);
   };

@@ -124,6 +124,7 @@ describe('Comments API', () => {
 
       const response = await request(app)
         .get(`${PATH.COMMENTS}/${comment.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(HttpStatus.Ok);
 
       expect(response.body).toEqual({
@@ -143,6 +144,7 @@ describe('Comments API', () => {
 
       const responseAfterDislike = await request(app)
         .get(`${PATH.COMMENTS}/${comment.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(HttpStatus.Ok);
 
       expect(responseAfterDislike.body).toEqual({
@@ -150,7 +152,7 @@ describe('Comments API', () => {
         likesInfo: {
           ...comment.likesInfo,
           dislikesCount: comment.likesInfo.dislikesCount + 1,
-          myStatus: LikeStatus.Like,
+          myStatus: LikeStatus.Dislike,
         },
       });
     });

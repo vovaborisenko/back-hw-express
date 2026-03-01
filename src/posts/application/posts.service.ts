@@ -6,12 +6,16 @@ import { NotExistError } from '../../core/errors/not-exist.error';
 import { PostUpdateDto } from '../dto/post.update-dto';
 import { BlogsRepository } from '../../blogs/repositories/blogs.repository';
 import { PostModel } from '../models/post.model';
+import { Result } from '../../core/types/result-object';
+import { PostLikeStatusUpdateDto } from '../dto/post-like-status.update-dto';
+import { LikeService } from '../../likes/application/like.service';
 
 @injectable()
 export class PostsService {
   constructor(
     @inject(PostsRepository) private readonly postsRepository: PostsRepository,
     @inject(BlogsRepository) private readonly blogsRepository: BlogsRepository,
+    @inject(LikeService) private readonly likesService: LikeService,
   ) {}
 
   async create(dto: PostCreateDto): Promise<Types.ObjectId> {
@@ -43,6 +47,24 @@ export class PostsService {
     Object.assign(postDocument, dto);
 
     await this.postsRepository.save(postDocument);
+  }
+
+  async updateLikeStatus(
+    id: string,
+    userId: string,
+    dto: PostLikeStatusUpdateDto,
+  ): Promise<Result<Types.ObjectId>> {
+    const post = await this.postsRepository.findById(id);
+
+    if (!post) {
+      throw new NotExistError('Post');
+    }
+
+    return this.likesService.updateOrCreate({
+      status: dto.likeStatus,
+      authorId: new Types.ObjectId(userId),
+      parentId: post._id,
+    });
   }
 
   delete(id: string): Promise<void> {

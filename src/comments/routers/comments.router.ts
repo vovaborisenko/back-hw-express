@@ -5,7 +5,7 @@ import { commentUpdateDtoValidationMiddleware } from '../validation/comment-upda
 import { accessTokenGuard } from '../../core/middlewares/guard/access-token.guard';
 import { container } from '../../composition.root';
 import { CommentsController } from './comments.controller';
-import { commentLikeStatusUpdateDtoValidationMiddleware } from '../validation/comment-like-status-update-dto-validation.middleware';
+import { likeStatusUpdateDtoValidationMiddleware } from '../../likes/validation/like-status-update-dto-validation.middleware';
 import { optionalUserMiddleware } from '../../core/middlewares/optional-user.middleware';
 
 const commentsController = container.get(CommentsController);
@@ -34,7 +34,7 @@ commentsRouter
     '/:id/like-status',
     accessTokenGuard,
     paramIdValidationMiddleware(),
-    commentLikeStatusUpdateDtoValidationMiddleware,
+    likeStatusUpdateDtoValidationMiddleware,
     reqValidationResultMiddleware,
     commentsController.updateItemLikeStatus,
   )

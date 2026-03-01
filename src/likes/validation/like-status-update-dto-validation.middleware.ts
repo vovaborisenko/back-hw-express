@@ -1,9 +1,9 @@
 import { body } from 'express-validator';
-import { LikeStatus } from '../../likes/types/like';
+import { LikeStatus } from '../types/like';
 
 const LikeStatuses = Object.values(LikeStatus);
 
-export const commentLikeStatusUpdateDtoValidationMiddleware = [
+export const likeStatusUpdateDtoValidationMiddleware = [
   body('likeStatus')
     .isString()
     .withMessage(`likeStatus should be string`)
